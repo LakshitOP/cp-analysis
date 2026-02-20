@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CP Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Algorithm Progress</h1>
+        <p class="subtitle">Last updated: <span id="last-updated">...</span></p>
+        
+        <div class="tracker-header">
+            <h2><span id="total-solved">0</span> / <span id="target-count">0</span> Solved</h2>
+        </div>
+        
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="green-bar"></div>
+        </div>
+
+        <div class="platform-grid">
+            <div class="platform-card codeforces">
+                <h3>Codeforces</h3>
+                <p id="cf-solved">0</p>
+            </div>
+            <div class="platform-card leetcode">
+                <h3>LeetCode</h3>
+                <p id="lc-solved">0</p>
+            </div>
+            <div class="platform-card codechef">
+                <h3>CodeChef</h3>
+                <p id="cc-solved">0</p>
+            </div>
+            <div class="platform-card atcoder">
+                <h3>AtCoder</h3>
+                <p id="ac-solved">0</p>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
