@@ -3,41 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CP Tracker</title>
+    <title>CP Tracker — Algorithm Progress</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Algorithm Progress</h1>
-        <p class="subtitle">Last updated: <span id="last-updated">...</span></p>
-        
-        <div class="tracker-header">
-            <h2><span id="total-solved">0</span> / <span id="target-count">0</span> Solved</h2>
-        </div>
-        
-        <div class="progress-bar-container">
-            <div class="progress-bar-fill" id="green-bar"></div>
-        </div>
-
-        <div class="platform-grid">
-            <div class="platform-card codeforces">
-                <h3>Codeforces</h3>
-                <p id="cf-solved">0</p>
-            </div>
-            <div class="platform-card leetcode">
-                <h3>LeetCode</h3>
-                <p id="lc-solved">0</p>
-            </div>
-            <div class="platform-card codechef">
-                <h3>CodeChef</h3>
-                <p id="cc-solved">0</p>
-            </div>
-            <div class="platform-card atcoder">
-                <h3>AtCoder</h3>
-                <p id="ac-solved">0</p>
-            </div>
+    <!-- Name modal (first-time only) -->
+    <div class="modal-overlay" id="name-modal" aria-hidden="true">
+        <div class="modal glass-card">
+            <h2 class="modal-title">What is your name?</h2>
+            <form id="name-form" class="modal-form">
+                <input type="text" id="name-input" placeholder="Enter your name" autocomplete="name" required>
+                <button type="submit" class="btn-primary">Continue</button>
+            </form>
         </div>
     </div>
+
+    <div class="app">
+        <header class="header">
+            <div class="header-left">
+                <h1 class="logo">CP Tracker</h1>
+                <p class="greeting" id="greeting">Welcome back, <span id="user-name">Guest</span></p>
+            </div>
+            <div class="header-right">
+                <span class="theme-label" id="theme-label">Dark</span>
+                <label class="toggle" aria-label="Toggle dark/light mode">
+                    <input type="checkbox" id="theme-toggle" aria-checked="false">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </header>
+
+        <main class="main">
+            <p class="last-updated">Last updated: <span id="last-updated">—</span></p>
+
+            <section class="dashboard">
+                <!-- Platform Donut -->
+                <div class="card glass-card chart-card">
+                    <h3 class="card-title">Platform Distribution</h3>
+                    <div class="chart-wrap">
+                        <canvas id="platform-donut" aria-label="Questions solved per platform"></canvas>
+                    </div>
+                </div>
+
+                <!-- Difficulty Bar Chart -->
+                <div class="card glass-card chart-card">
+                    <h3 class="card-title">Questions by Difficulty</h3>
+                    <div class="chart-wrap chart-wrap-bar">
+                        <canvas id="difficulty-bars" aria-label="Questions solved by difficulty"></canvas>
+                    </div>
+                </div>
+
+                <!-- GitHub Streak -->
+                <div class="card glass-card streak-card">
+                    <h3 class="card-title">GitHub Streak</h3>
+                    <div class="streak-wrap">
+                        <img
+                            id="streak-img"
+                            src="https://github-readme-streak-stats.herokuapp.com/?user=LakshitOP&theme=dark&hide_border=true&border_radius=5"
+                            alt="GitHub streak stats"
+                            class="streak-img"
+                        >
+                    </div>
+                </div>
+
+                <!-- Contribution Heatmap -->
+                <div class="card glass-card heatmap-card">
+                    <h3 class="card-title">Activity Heatmap</h3>
+                    <div class="heatmap-legend">
+                        <span>Less</span>
+                        <div class="legend-swatches">
+                            <span class="swatch" data-level="0"></span>
+                            <span class="swatch" data-level="1"></span>
+                            <span class="swatch" data-level="2"></span>
+                            <span class="swatch" data-level="3"></span>
+                            <span class="swatch" data-level="4"></span>
+                        </div>
+                        <span>More</span>
+                    </div>
+                    <div class="heatmap-grid" id="heatmap-grid" aria-label="Contribution heatmap"></div>
+                </div>
+
+                <!-- Recent Submissions -->
+                <div class="card glass-card submissions-card full-width">
+                    <h3 class="card-title">Recent Submissions</h3>
+                    <div class="submissions-wrap">
+                        <table class="submissions-table">
+                            <thead>
+                                <tr>
+                                    <th>Problem</th>
+                                    <th>Platform</th>
+                                    <th>Difficulty</th>
+                                    <th>Solved</th>
+                                </tr>
+                            </thead>
+                            <tbody id="submissions-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
