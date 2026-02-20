@@ -1,9 +1,9 @@
 {
-    "last_updated": "2026-02-20 10:54:16",
-    "total_solved": 14,
+    "last_updated": "2026-02-20 08:33:57",
+    "total_solved": 54,
     "target": 1500,
     "platforms": {
-        "codeforces": 0,
+        "codeforces": 40,
         "leetcode": 13,
         "codechef": 0,
         "atcoder": 1
@@ -11,22 +11,22 @@
     "difficulty_chart": [
         {
             "label": "CF <1000",
-            "count": 0,
+            "count": 33,
             "color": "#4caf50"
         },
         {
             "label": "CF 1000-1199",
-            "count": 0,
+            "count": 5,
             "color": "#8bc34a"
         },
         {
             "label": "CF 1200-1399",
-            "count": 0,
+            "count": 1,
             "color": "#ffc107"
         },
         {
             "label": "CF 1400+",
-            "count": 0,
+            "count": 1,
             "color": "#f44336"
         },
         {
@@ -45,5 +45,96 @@
             "color": "#f44336"
         }
     ],
-    "recent_submissions": []
+    "recent_submissions": [
+        {
+            "name": "Make It Zero",
+            "url": "https://codeforces.com/contest/1869/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "900",
+            "difficultyClass": "easy",
+            "solvedAt": "Feb 16, 2026"
+        },
+        {
+            "name": "Greg and Array",
+            "url": "https://codeforces.com/contest/295/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "1400",
+            "difficultyClass": "hard",
+            "solvedAt": "Feb 04, 2026"
+        },
+        {
+            "name": "Two Permutations",
+            "url": "https://codeforces.com/contest/1761/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 20, 2026"
+        },
+        {
+            "name": "We Need the Zero",
+            "url": "https://codeforces.com/contest/1805/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 20, 2026"
+        },
+        {
+            "name": "Walking Master",
+            "url": "https://codeforces.com/contest/1806/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 18, 2026"
+        },
+        {
+            "name": "Coins",
+            "url": "https://codeforces.com/contest/1814/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 18, 2026"
+        },
+        {
+            "name": "Blank Space",
+            "url": "https://codeforces.com/contest/1829/problem/B",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 17, 2026"
+        },
+        {
+            "name": "Twin Permutations",
+            "url": "https://codeforces.com/contest/1831/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 17, 2026"
+        },
+        {
+            "name": "Unit Array",
+            "url": "https://codeforces.com/contest/1834/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 17, 2026"
+        },
+        {
+            "name": "Grasshopper on a Line",
+            "url": "https://codeforces.com/contest/1837/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 16, 2026"
+        }
+    ]
 }
