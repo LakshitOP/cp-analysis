@@ -10,13 +10,46 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Name modal (first-time only) -->
     <div class="modal-overlay" id="name-modal" aria-hidden="true">
         <div class="modal glass-card">
-            <h2 class="modal-title">What is your name?</h2>
+            <h2 class="modal-title">Welcome to CP Tracker</h2>
             <form id="name-form" class="modal-form">
-                <input type="text" id="name-input" placeholder="Enter your name" autocomplete="name" required>
-                <button type="submit" class="btn-primary">Continue</button>
+                <input
+                    type="text"
+                    id="name-input"
+                    placeholder="Your name (for greeting)"
+                    autocomplete="name"
+                    required
+                >
+                <input
+                    type="text"
+                    id="cf-handle-input"
+                    placeholder="Codeforces handle"
+                    autocomplete="off"
+                >
+                <input
+                    type="text"
+                    id="lc-handle-input"
+                    placeholder="LeetCode handle"
+                    autocomplete="off"
+                >
+                <input
+                    type="text"
+                    id="ac-handle-input"
+                    placeholder="AtCoder handle (used via kenkoooo API)"
+                    autocomplete="off"
+                >
+                <input
+                    type="text"
+                    id="cc-handle-input"
+                    placeholder="CodeChef handle"
+                    autocomplete="off"
+                >
+                <p class="modal-hint">Save handles here, then click &quot;Download handles config&quot; and place <code>handles.json</code> in your project folder. Run <code>python scraper.py</code> — no terminal input needed.</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="download-handles-btn">Download handles config</button>
+                    <button type="submit" class="btn-primary">Save & Continue</button>
+                </div>
             </form>
         </div>
     </div>
@@ -28,6 +61,7 @@
                 <p class="greeting" id="greeting">Welcome back, <span id="user-name">Guest</span></p>
             </div>
             <div class="header-right">
+                <button type="button" class="btn-edit-handles" id="edit-handles-btn" aria-label="Edit handles and name">Edit handles</button>
                 <span class="theme-label" id="theme-label">Dark</span>
                 <label class="toggle" aria-label="Toggle dark/light mode">
                     <input type="checkbox" id="theme-toggle" aria-checked="false">
@@ -54,6 +88,33 @@
                     <div class="chart-wrap chart-wrap-bar">
                         <canvas id="difficulty-bars" aria-label="Questions solved by difficulty"></canvas>
                     </div>
+                </div>
+
+                <!-- Difficulty Trend Chart -->
+                <div class="card glass-card chart-card full-width">
+                    <h3 class="card-title">Difficulty Trend Over Time</h3>
+                    <div class="chart-wrap chart-wrap-line">
+                        <canvas id="difficulty-trend" aria-label="Difficulty progression over time"></canvas>
+                    </div>
+                </div>
+
+                <!-- CP Streak Cards -->
+                <div class="card glass-card streak-card">
+                    <h3 class="card-title">Current Streak</h3>
+                    <div class="streak-value" id="current-streak">0</div>
+                    <div class="streak-label">days</div>
+                </div>
+
+                <div class="card glass-card streak-card">
+                    <h3 class="card-title">Longest Streak</h3>
+                    <div class="streak-value" id="longest-streak">0</div>
+                    <div class="streak-label">days</div>
+                </div>
+
+                <div class="card glass-card streak-card">
+                    <h3 class="card-title">Active Days (30d)</h3>
+                    <div class="streak-value" id="active-days">0</div>
+                    <div class="streak-label">days</div>
                 </div>
 
                 <!-- GitHub Streak -->
@@ -83,7 +144,35 @@
                         </div>
                         <span>More</span>
                     </div>
-                    <div class="heatmap-grid" id="heatmap-grid" aria-label="Contribution heatmap"></div>
+                    <div class="heatmap-layout">
+                        <div class="heatmap-header">
+                            <div class="heatmap-header-spacer"></div>
+                            <div class="heatmap-months" id="heatmap-months"></div>
+                        </div>
+                        <div class="heatmap-body">
+                            <div class="heatmap-days">
+                                <span>Mon</span>
+                                <span>Wed</span>
+                                <span>Fri</span>
+                            </div>
+                            <div class="heatmap-grid" id="heatmap-grid" aria-label="Contribution heatmap"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tag Analysis -->
+                <div class="card glass-card tag-analysis-card full-width">
+                    <h3 class="card-title">Tag Analysis</h3>
+                    <div class="tag-analysis-content">
+                        <div class="tag-section">
+                            <h4 class="tag-section-title">Top Solved Tags</h4>
+                            <div class="tag-list" id="top-tags"></div>
+                        </div>
+                        <div class="tag-section">
+                            <h4 class="tag-section-title">Weak Areas</h4>
+                            <div class="tag-list" id="weak-tags"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Recent Submissions -->

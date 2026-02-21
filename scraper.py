@@ -2,16 +2,13 @@ import json
 import requests
 import re
 from datetime import datetime
-CF_HANDLE = "Derxy"
-LC_HANDLE = "derxy"
-CC_HANDLE = "derxy"
-AC_HANDLE = "derxy"
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
 def get_codeforces_data(handle):
     recent_subs = []
     cf_diff = {"CF <1000": 0, "CF 1000-1199": 0, "CF 1200-1399": 0, "CF 1400+": 0}
+    tag_counts = {}
     count = 0
     try:
         url = f"https://codeforces.com/api/user.status?handle={handle}"
@@ -29,6 +26,10 @@ def get_codeforces_data(handle):
                             elif rating < 1200: cf_diff["CF 1000-1199"] += 1
                             elif rating < 1400: cf_diff["CF 1200-1399"] += 1
                             else: cf_diff["CF 1400+"] += 1
+                        # Collect tags for all solved problems
+                        tags = sub["problem"].get("tags", [])
+                        for tag in tags:
+                            tag_counts[tag] = tag_counts.get(tag, 0) + 1
                         if len(recent_subs) < 10:
                             diff_class = "hard" if rating and rating >= 1400 else ("medium" if rating and rating >= 1000 else "easy")
                             recent_subs.append({
@@ -38,12 +39,13 @@ def get_codeforces_data(handle):
                                 "platformLabel": "CF",
                                 "difficulty": str(rating) if rating else "N/A",
                                 "difficultyClass": diff_class,
-                                "solvedAt": datetime.fromtimestamp(sub["creationTimeSeconds"]).strftime('%b %d, %Y')
+                                "solvedAt": datetime.fromtimestamp(sub["creationTimeSeconds"]).strftime('%b %d, %Y'),
+                                "tags": tags
                             })
             count = len(solved_ids)
     except Exception as e:
         print(f"❌ Codeforces failed: {e}")
-    return count, recent_subs, cf_diff
+    return count, recent_subs, cf_diff, tag_counts
 
 def get_leetcode_data(handle):
     lc_total = 0
@@ -86,11 +88,43 @@ def get_atcoder(handle):
         pass
     return 0
 
+def load_handles_from_config():
+    """Load handles from handles.json if present (created via frontend 'Download handles config')."""
+    try:
+        with open("handles.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return (
+                data.get("cf_handle") or "",
+                data.get("lc_handle") or "",
+                data.get("cc_handle") or "",
+                data.get("ac_handle") or "",
+            )
+    except FileNotFoundError:
+        return None
+    except (json.JSONDecodeError, KeyError):
+        return None
+
+
 def main():
-    cf_count, cf_recent, cf_diff = get_codeforces_data(CF_HANDLE)
-    lc_count, lc_diff = get_leetcode_data(LC_HANDLE)
-    cc_count = get_codechef(CC_HANDLE)
-    ac_count = get_atcoder(AC_HANDLE)
+    handles = load_handles_from_config()
+    if handles is not None:
+        cf_handle, lc_handle, cc_handle, ac_handle = handles
+        if not cf_handle and not lc_handle and not cc_handle and not ac_handle:
+            handles = None
+    if handles is None:
+        print("🔧 No handles.json found. Configure handles (press Enter to keep default):")
+        cf_handle = input("Codeforces handle [Derxy]: ").strip() or "Derxy"
+        lc_handle = input("LeetCode handle [derxy]: ").strip() or "derxy"
+        cc_handle = input("CodeChef handle [derxy]: ").strip() or "derxy"
+        ac_handle = input("AtCoder handle [derxy]: ").strip() or "derxy"
+    else:
+        cf_handle, lc_handle, cc_handle, ac_handle = handles
+        print("🔧 Using handles from handles.json")
+
+    cf_count, cf_recent, cf_diff, cf_tags = get_codeforces_data(cf_handle)
+    lc_count, lc_diff = get_leetcode_data(lc_handle)
+    cc_count = get_codechef(cc_handle)
+    ac_count = get_atcoder(ac_handle)
     total = cf_count + lc_count + cc_count + ac_count
 
     chart_difficulty = [
@@ -106,9 +140,15 @@ def main():
         "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "total_solved": total,
         "target": 1500,
-        "platforms": {"codeforces": cf_count, "leetcode": lc_count, "codechef": cc_count, "atcoder": ac_count},
+        "platforms": {
+            "codeforces": cf_count,
+            "leetcode": lc_count,
+            "codechef": cc_count,
+            "atcoder": ac_count,
+        },
         "difficulty_chart": chart_difficulty,
-        "recent_submissions": cf_recent
+        "recent_submissions": cf_recent,
+        "tag_counts": cf_tags
     }
     with open("data.json", "w") as f:
         json.dump(data, f, indent=4)
