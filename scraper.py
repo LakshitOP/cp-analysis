@@ -1,7 +1,16 @@
 import json
 import requests
 import re
+import os
 from datetime import datetime
+from supabase import create_client
+from dotenv import load_dotenv
+load_dotenv()
+
+SUPABASE_URL = os.environ["SUPABASE_URL"]
+SUPABASE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
@@ -88,43 +97,36 @@ def get_atcoder(handle):
         pass
     return 0
 
-def load_handles_from_config():
-    """Load handles from handles.json if present (created via frontend 'Download handles config')."""
-    try:
-        with open("handles.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
-            return (
-                data.get("cf_handle") or "",
-                data.get("lc_handle") or "",
-                data.get("cc_handle") or "",
-                data.get("ac_handle") or "",
-            )
-    except FileNotFoundError:
-        return None
-    except (json.JSONDecodeError, KeyError):
-        return None
 
+
+def load_handles():
+    defaults = ("Derxy", "derxy", "derxy", "derxy")
+    try:
+        res = supabase.table("Profiles").select("*").limit(1).execute()
+        if not res.data:
+            return defaults
+
+        row = res.data[0] or {}
+        return (
+            row.get("codeforces", defaults[0]),
+            row.get("leetcode", defaults[1]),
+            row.get("codechef", defaults[2]),
+            row.get("atcoder", defaults[3]),
+        )
+    except Exception as e:
+        print(f"Supabase handle load failed: {e}")
+        return defaults
 
 def main():
-    handles = load_handles_from_config()
-    if handles is not None:
-        cf_handle, lc_handle, cc_handle, ac_handle = handles
-        if not cf_handle and not lc_handle and not cc_handle and not ac_handle:
-            handles = None
-    if handles is None:
-        print("🔧 No handles.json found. Configure handles (press Enter to keep default):")
-        cf_handle = input("Codeforces handle [Derxy]: ").strip() or "Derxy"
-        lc_handle = input("LeetCode handle [derxy]: ").strip() or "derxy"
-        cc_handle = input("CodeChef handle [derxy]: ").strip() or "derxy"
-        ac_handle = input("AtCoder handle [derxy]: ").strip() or "derxy"
-    else:
-        cf_handle, lc_handle, cc_handle, ac_handle = handles
-        print("🔧 Using handles from handles.json")
+    cf, lc, cc, ac = load_handles()
 
-    cf_count, cf_recent, cf_diff, cf_tags = get_codeforces_data(cf_handle)
-    lc_count, lc_diff = get_leetcode_data(lc_handle)
-    cc_count = get_codechef(cc_handle)
-    ac_count = get_atcoder(ac_handle)
+    cf_count, cf_recent, cf_diff, cf_tags = get_codeforces_data(cf)
+    lc_count, lc_diff = get_leetcode_data(lc)
+    cc_count = get_codechef(cc)
+    ac_count = get_atcoder(ac)
+
+    # write data.json as you already do
+
     total = cf_count + lc_count + cc_count + ac_count
 
     chart_difficulty = [
@@ -155,3 +157,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

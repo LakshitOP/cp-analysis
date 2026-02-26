@@ -1,6 +1,6 @@
 {
-    "last_updated": "2026-02-20 10:54:16",
-    "total_solved": 14,
+    "last_updated": "2026-02-27 03:17:55",
+    "total_solved": 55,
     "target": 1500,
     "platforms": {
         "codeforces": 40,
@@ -45,5 +45,153 @@
             "color": "#f44336"
         }
     ],
-    "recent_submissions": []
+    "recent_submissions": [
+        {
+            "name": "Make It Zero",
+            "url": "https://codeforces.com/contest/1869/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "900",
+            "difficultyClass": "easy",
+            "solvedAt": "Feb 17, 2026",
+            "tags": [
+                "constructive algorithms"
+            ]
+        },
+        {
+            "name": "Greg and Array",
+            "url": "https://codeforces.com/contest/295/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "1400",
+            "difficultyClass": "hard",
+            "solvedAt": "Feb 05, 2026",
+            "tags": [
+                "data structures",
+                "implementation"
+            ]
+        },
+        {
+            "name": "Two Permutations",
+            "url": "https://codeforces.com/contest/1761/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 21, 2026",
+            "tags": [
+                "brute force",
+                "constructive algorithms"
+            ]
+        },
+        {
+            "name": "We Need the Zero",
+            "url": "https://codeforces.com/contest/1805/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 20, 2026",
+            "tags": [
+                "bitmasks",
+                "brute force"
+            ]
+        },
+        {
+            "name": "Walking Master",
+            "url": "https://codeforces.com/contest/1806/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 18, 2026",
+            "tags": [
+                "geometry",
+                "greedy",
+                "math"
+            ]
+        },
+        {
+            "name": "Coins",
+            "url": "https://codeforces.com/contest/1814/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 18, 2026",
+            "tags": [
+                "implementation",
+                "math"
+            ]
+        },
+        {
+            "name": "Blank Space",
+            "url": "https://codeforces.com/contest/1829/problem/B",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 17, 2026",
+            "tags": [
+                "implementation"
+            ]
+        },
+        {
+            "name": "Twin Permutations",
+            "url": "https://codeforces.com/contest/1831/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 17, 2026",
+            "tags": [
+                "constructive algorithms"
+            ]
+        },
+        {
+            "name": "Unit Array",
+            "url": "https://codeforces.com/contest/1834/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 17, 2026",
+            "tags": [
+                "greedy",
+                "math"
+            ]
+        },
+        {
+            "name": "Grasshopper on a Line",
+            "url": "https://codeforces.com/contest/1837/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 16, 2026",
+            "tags": [
+                "constructive algorithms",
+                "math"
+            ]
+        }
+    ],
+    "tag_counts": {
+        "constructive algorithms": 10,
+        "data structures": 1,
+        "implementation": 9,
+        "brute force": 7,
+        "bitmasks": 1,
+        "geometry": 1,
+        "greedy": 13,
+        "math": 23,
+        "binary search": 1,
+        "dfs and similar": 1,
+        "dp": 3,
+        "graphs": 1,
+        "number theory": 3,
+        "games": 3,
+        "sortings": 4,
+        "strings": 2,
+        "combinatorics": 1
+    }
 }

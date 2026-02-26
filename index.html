@@ -45,9 +45,8 @@
                     placeholder="CodeChef handle"
                     autocomplete="off"
                 >
-                <p class="modal-hint">Save handles here, then click &quot;Download handles config&quot; and place <code>handles.json</code> in your project folder. Run <code>python scraper.py</code> — no terminal input needed.</p>
+                <p class="modal-hint">Handles are saved in Supabase. After saving, run <code>uv run python scraper.py</code> to refresh <code>data.json</code>.</p>
                 <div class="modal-actions">
-                    <button type="button" class="btn-secondary" id="download-handles-btn">Download handles config</button>
                     <button type="submit" class="btn-primary">Save & Continue</button>
                 </div>
             </form>
@@ -197,6 +196,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
+
+

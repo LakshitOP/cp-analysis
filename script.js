@@ -19,11 +19,18 @@ const acHandleInput = document.getElementById('ac-handle-input');
 const ccHandleInput = document.getElementById('cc-handle-input');
 const userNameEl = document.getElementById('user-name');
 
+import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
+const supabase = createClient(
+  "https://ssqujoxmtkbnjwsdfmpb.supabase.co",
+  "sb_publishable_Lar1r6YYzsuV07RLXJmJwA_gdRghveL"
+);
+
 function getUserName() {
   return localStorage.getItem(STORAGE_NAME) || '';
 }
 
-function setUserProfile({ name, cfHandle, lcHandle, acHandle }) {
+function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle }) {
   const trimmedName = (name || '').trim();
   if (trimmedName) {
     localStorage.setItem(STORAGE_NAME, trimmedName);
@@ -51,49 +58,104 @@ function setUserProfile({ name, cfHandle, lcHandle, acHandle }) {
 }
 
 function showGreeting() {
-  const name = getUserName();
-  if (name) {
-    userNameEl.textContent = name;
-    nameModal.setAttribute('aria-hidden', 'true');
+  const name = localStorage.getItem(STORAGE_NAME);
+  const cf = localStorage.getItem(STORAGE_CF_HANDLE);
+  const lc = localStorage.getItem(STORAGE_LC_HANDLE);
+  const cc = localStorage.getItem(STORAGE_CC_HANDLE);
+  const ac = localStorage.getItem(STORAGE_AC_HANDLE);
+
+  const isConfigured = cf || lc || cc || ac;
+
+  if (isConfigured) {
+    userNameEl.textContent = name || "Guest";
+    nameModal.setAttribute("aria-hidden", "true");
   } else {
-    nameModal.setAttribute('aria-hidden', 'false');
+    nameModal.setAttribute("aria-hidden", "false");
   }
 
-  // Pre-fill stored handles when modal opens
-  if (cfHandleInput) cfHandleInput.value = localStorage.getItem(STORAGE_CF_HANDLE) || '';
-  if (lcHandleInput) lcHandleInput.value = localStorage.getItem(STORAGE_LC_HANDLE) || '';
-  if (acHandleInput) acHandleInput.value = localStorage.getItem(STORAGE_AC_HANDLE) || '';
-  if (ccHandleInput) ccHandleInput.value = localStorage.getItem(STORAGE_CC_HANDLE) || '';
+  // Pre-fill fields if user clicks edit
+  cfHandleInput.value = cf || "";
+  lcHandleInput.value = lc || "";
+  ccHandleInput.value = cc || "";
+  acHandleInput.value = ac || "";
+}
+
+async function getFirstProfileRow() {
+  const { data, error } = await supabase
+    .from("Profiles")
+    .select("id, name, codeforces, leetcode, codechef, atcoder")
+    .order("id", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+async function upsertProfile(profile) {
+  const row = await getFirstProfileRow();
+  if (row?.id) {
+    const { error } = await supabase
+      .from("Profiles")
+      .update(profile)
+      .eq("id", row.id);
+    if (error) throw error;
+    return;
+  }
+
+  const { error } = await supabase.from("Profiles").insert(profile);
+  if (error) throw error;
+}
+
+async function syncProfileFromSupabase() {
+  try {
+    const row = await getFirstProfileRow();
+    if (!row) return;
+
+    setUserProfile({
+      name: row.name || "Guest",
+      cfHandle: row.codeforces || "Derxy",
+      lcHandle: row.leetcode || "derxy",
+      ccHandle: row.codechef || "derxy",
+      acHandle: row.atcoder || "derxy"
+    });
+
+    if (nameInput) nameInput.value = row.name || "";
+    if (cfHandleInput) cfHandleInput.value = row.codeforces || "";
+    if (lcHandleInput) lcHandleInput.value = row.leetcode || "";
+    if (ccHandleInput) ccHandleInput.value = row.codechef || "";
+    if (acHandleInput) acHandleInput.value = row.atcoder || "";
+  } catch (error) {
+    console.error("Failed to load profile from Supabase", error);
+  }
 }
 
 if (nameForm) {
-  nameForm.addEventListener('submit', (e) => {
+  nameForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    setUserProfile({
-      name: nameInput ? nameInput.value : '',
-      cfHandle: cfHandleInput ? cfHandleInput.value : '',
-      lcHandle: lcHandleInput ? lcHandleInput.value : '',
-      acHandle: acHandleInput ? acHandleInput.value : '',
-      ccHandle: ccHandleInput ? ccHandleInput.value : '',
-    });
+
+    const profile = {
+      name: nameInput.value.trim() || "Guest",
+      codeforces: cfHandleInput.value.trim() || "Derxy",
+      leetcode: lcHandleInput.value.trim() || "derxy",
+      codechef: ccHandleInput.value.trim() || "derxy",
+      atcoder: acHandleInput.value.trim() || "derxy"
+    };
+
+    try {
+      await upsertProfile(profile);
+      setUserProfile({
+        name: profile.name,
+        cfHandle: profile.codeforces,
+        lcHandle: profile.leetcode,
+        ccHandle: profile.codechef,
+        acHandle: profile.atcoder
+      });
+    } catch (error) {
+      console.error("Failed to save profile to Supabase", error);
+    }
   });
 }
-
-function downloadHandlesConfig() {
-  const config = {
-    cf_handle: (localStorage.getItem(STORAGE_CF_HANDLE) || '').trim() || null,
-    lc_handle: (localStorage.getItem(STORAGE_LC_HANDLE) || '').trim() || null,
-    cc_handle: (localStorage.getItem(STORAGE_CC_HANDLE) || '').trim() || null,
-    ac_handle: (localStorage.getItem(STORAGE_AC_HANDLE) || '').trim() || null,
-  };
-  const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'handles.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
 function openHandlesModal() {
   if (nameModal) {
     showGreeting();
@@ -102,9 +164,7 @@ function openHandlesModal() {
 }
 
 const editHandlesBtn = document.getElementById('edit-handles-btn');
-const downloadHandlesBtn = document.getElementById('download-handles-btn');
 if (editHandlesBtn) editHandlesBtn.addEventListener('click', openHandlesModal);
-if (downloadHandlesBtn) downloadHandlesBtn.addEventListener('click', downloadHandlesConfig);
 
 const themeToggle = document.getElementById('theme-toggle');
 const themeLabel = document.getElementById('theme-label');
@@ -1023,4 +1083,7 @@ function renderTagAnalysis() {
 
 applyTheme(getStoredTheme());
 showGreeting();
-loadStats();
+syncProfileFromSupabase().finally(() => {
+  loadStats();
+});
+
