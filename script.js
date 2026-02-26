@@ -4,6 +4,7 @@ const STORAGE_CF_HANDLE = 'cp-tracker-cf-handle';
 const STORAGE_LC_HANDLE = 'cp-tracker-lc-handle';
 const STORAGE_AC_HANDLE = 'cp-tracker-ac-handle';
 const STORAGE_CC_HANDLE = 'cp-tracker-cc-handle';
+const STORAGE_SETUP_DONE = 'cp-tracker-setup-done';
 const DEFAULT_THEME = 'dark';
 let platformCounts = { codeforces: 0, leetcode: 0, codechef: 0, atcoder: 0 };
 let difficultyData = [];
@@ -17,6 +18,7 @@ const cfHandleInput = document.getElementById('cf-handle-input');
 const lcHandleInput = document.getElementById('lc-handle-input');
 const acHandleInput = document.getElementById('ac-handle-input');
 const ccHandleInput = document.getElementById('cc-handle-input');
+const modalCloseBtn = document.getElementById('modal-close-btn');
 const userNameEl = document.getElementById('user-name');
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
@@ -28,6 +30,29 @@ const supabase = createClient(
 
 function getUserName() {
   return localStorage.getItem(STORAGE_NAME) || '';
+}
+
+function getStoredProfile() {
+  return {
+    name: localStorage.getItem(STORAGE_NAME) || '',
+    cf: localStorage.getItem(STORAGE_CF_HANDLE) || '',
+    lc: localStorage.getItem(STORAGE_LC_HANDLE) || '',
+    cc: localStorage.getItem(STORAGE_CC_HANDLE) || '',
+    ac: localStorage.getItem(STORAGE_AC_HANDLE) || ''
+  };
+}
+
+function prefillProfileFields(profile = getStoredProfile()) {
+  if (nameInput) nameInput.value = profile.name || '';
+  if (cfHandleInput) cfHandleInput.value = profile.cf || '';
+  if (lcHandleInput) lcHandleInput.value = profile.lc || '';
+  if (ccHandleInput) ccHandleInput.value = profile.cc || '';
+  if (acHandleInput) acHandleInput.value = profile.ac || '';
+}
+
+function setModalOpen(isOpen) {
+  if (!nameModal) return;
+  nameModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
 }
 
 function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle }) {
@@ -54,30 +79,29 @@ function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle }) {
     if (trimmed) localStorage.setItem(STORAGE_CC_HANDLE, trimmed);
   }
 
-  nameModal.setAttribute('aria-hidden', 'true');
+  localStorage.setItem(STORAGE_SETUP_DONE, 'true');
+  showGreeting();
+  setModalOpen(false);
 }
 
 function showGreeting() {
-  const name = localStorage.getItem(STORAGE_NAME);
-  const cf = localStorage.getItem(STORAGE_CF_HANDLE);
-  const lc = localStorage.getItem(STORAGE_LC_HANDLE);
-  const cc = localStorage.getItem(STORAGE_CC_HANDLE);
-  const ac = localStorage.getItem(STORAGE_AC_HANDLE);
+  const { name } = getStoredProfile();
+  userNameEl.textContent = name || 'Guest';
+}
 
-  const isConfigured = cf || lc || cc || ac;
+function shouldAutoOpenSetupModal() {
+  const setupDone = localStorage.getItem(STORAGE_SETUP_DONE) === 'true';
+  const { cf, lc, cc, ac } = getStoredProfile();
+  return !setupDone && !(cf || lc || cc || ac);
+}
 
-  if (isConfigured) {
-    userNameEl.textContent = name || "Guest";
-    nameModal.setAttribute("aria-hidden", "true");
-  } else {
-    nameModal.setAttribute("aria-hidden", "false");
-  }
+function openHandlesModal() {
+  prefillProfileFields();
+  setModalOpen(true);
+}
 
-  // Pre-fill fields if user clicks edit
-  cfHandleInput.value = cf || "";
-  lcHandleInput.value = lc || "";
-  ccHandleInput.value = cc || "";
-  acHandleInput.value = ac || "";
+function closeHandlesModal() {
+  setModalOpen(false);
 }
 
 async function getFirstProfileRow() {
@@ -120,11 +144,13 @@ async function syncProfileFromSupabase() {
       acHandle: row.atcoder || "derxy"
     });
 
-    if (nameInput) nameInput.value = row.name || "";
-    if (cfHandleInput) cfHandleInput.value = row.codeforces || "";
-    if (lcHandleInput) lcHandleInput.value = row.leetcode || "";
-    if (ccHandleInput) ccHandleInput.value = row.codechef || "";
-    if (acHandleInput) acHandleInput.value = row.atcoder || "";
+    prefillProfileFields({
+      name: row.name || '',
+      cf: row.codeforces || '',
+      lc: row.leetcode || '',
+      cc: row.codechef || '',
+      ac: row.atcoder || ''
+    });
   } catch (error) {
     console.error("Failed to load profile from Supabase", error);
   }
@@ -156,16 +182,10 @@ if (nameForm) {
     }
   });
 }
-function openHandlesModal() {
-  if (nameModal) {
-    showGreeting();
-    nameModal.setAttribute('aria-hidden', 'false');
-  }
-}
 
 const editHandlesBtn = document.getElementById('edit-handles-btn');
 if (editHandlesBtn) editHandlesBtn.addEventListener('click', openHandlesModal);
-
+if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeHandlesModal);
 const themeToggle = document.getElementById('theme-toggle');
 const themeLabel = document.getElementById('theme-label');
 const streakImg = document.getElementById('streak-img');
@@ -1083,6 +1103,8 @@ function renderTagAnalysis() {
 
 applyTheme(getStoredTheme());
 showGreeting();
+prefillProfileFields();
+setModalOpen(shouldAutoOpenSetupModal());
 syncProfileFromSupabase().finally(() => {
   loadStats();
 });
