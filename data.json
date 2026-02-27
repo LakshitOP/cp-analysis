@@ -1,9 +1,9 @@
 {
-    "last_updated": "2026-02-27 03:17:55",
-    "total_solved": 55,
+    "last_updated": "2026-02-27 12:17:38",
+    "total_solved": 129,
     "target": 1500,
     "platforms": {
-        "codeforces": 40,
+        "codeforces": 114,
         "leetcode": 13,
         "codechef": 0,
         "atcoder": 2
@@ -11,22 +11,22 @@
     "difficulty_chart": [
         {
             "label": "CF <1000",
-            "count": 33,
+            "count": 85,
             "color": "#4caf50"
         },
         {
             "label": "CF 1000-1199",
-            "count": 5,
+            "count": 22,
             "color": "#8bc34a"
         },
         {
             "label": "CF 1200-1399",
-            "count": 1,
+            "count": 6,
             "color": "#ffc107"
         },
         {
             "label": "CF 1400+",
-            "count": 1,
+            "count": 0,
             "color": "#f44336"
         },
         {
@@ -47,151 +47,157 @@
     ],
     "recent_submissions": [
         {
-            "name": "Make It Zero",
-            "url": "https://codeforces.com/contest/1869/problem/A",
+            "name": "Lawn Mower",
+            "url": "https://codeforces.com/contest/2194/problem/A",
             "platform": "codeforces",
             "platformLabel": "CF",
-            "difficulty": "900",
+            "difficulty": "N/A",
             "difficultyClass": "easy",
-            "solvedAt": "Feb 17, 2026",
+            "solvedAt": "Feb 08, 2026",
+            "tags": [
+                "greedy",
+                "math"
+            ]
+        },
+        {
+            "name": "Seats",
+            "url": "https://codeforces.com/contest/2188/problem/B",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "1000",
+            "difficultyClass": "medium",
+            "solvedAt": "Jan 29, 2026",
+            "tags": [
+                "greedy"
+            ]
+        },
+        {
+            "name": "Divisible Permutation",
+            "url": "https://codeforces.com/contest/2188/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 29, 2026",
             "tags": [
                 "constructive algorithms"
             ]
         },
         {
-            "name": "Greg and Array",
-            "url": "https://codeforces.com/contest/295/problem/A",
+            "name": "Table with Numbers",
+            "url": "https://codeforces.com/contest/2189/problem/A",
             "platform": "codeforces",
             "platformLabel": "CF",
-            "difficulty": "1400",
-            "difficultyClass": "hard",
-            "solvedAt": "Feb 05, 2026",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 23, 2026",
             "tags": [
-                "data structures",
+                "greedy",
                 "implementation"
             ]
         },
         {
-            "name": "Two Permutations",
-            "url": "https://codeforces.com/contest/1761/problem/A",
+            "name": "New Year and Hurry",
+            "url": "https://codeforces.com/contest/750/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 22, 2026",
+            "tags": [
+                "binary search",
+                "brute force",
+                "implementation",
+                "math"
+            ]
+        },
+        {
+            "name": "Doremy's Paint 3",
+            "url": "https://codeforces.com/contest/1890/problem/A",
+            "platform": "codeforces",
+            "platformLabel": "CF",
+            "difficulty": "800",
+            "difficultyClass": "easy",
+            "solvedAt": "Jan 22, 2026",
+            "tags": [
+                "constructive algorithms"
+            ]
+        },
+        {
+            "name": "Journey",
+            "url": "https://codeforces.com/contest/2051/problem/B",
             "platform": "codeforces",
             "platformLabel": "CF",
             "difficulty": "800",
             "difficultyClass": "easy",
             "solvedAt": "Jan 21, 2026",
             "tags": [
-                "brute force",
-                "constructive algorithms"
-            ]
-        },
-        {
-            "name": "We Need the Zero",
-            "url": "https://codeforces.com/contest/1805/problem/A",
-            "platform": "codeforces",
-            "platformLabel": "CF",
-            "difficulty": "800",
-            "difficultyClass": "easy",
-            "solvedAt": "Jan 20, 2026",
-            "tags": [
-                "bitmasks",
-                "brute force"
-            ]
-        },
-        {
-            "name": "Walking Master",
-            "url": "https://codeforces.com/contest/1806/problem/A",
-            "platform": "codeforces",
-            "platformLabel": "CF",
-            "difficulty": "800",
-            "difficultyClass": "easy",
-            "solvedAt": "Jan 18, 2026",
-            "tags": [
-                "geometry",
-                "greedy",
+                "binary search",
                 "math"
             ]
         },
         {
-            "name": "Coins",
-            "url": "https://codeforces.com/contest/1814/problem/A",
+            "name": "String Task",
+            "url": "https://codeforces.com/contest/118/problem/A",
             "platform": "codeforces",
             "platformLabel": "CF",
-            "difficulty": "800",
-            "difficultyClass": "easy",
-            "solvedAt": "Jan 18, 2026",
+            "difficulty": "1000",
+            "difficultyClass": "medium",
+            "solvedAt": "Jan 21, 2026",
             "tags": [
                 "implementation",
-                "math"
+                "strings"
             ]
         },
         {
-            "name": "Blank Space",
-            "url": "https://codeforces.com/contest/1829/problem/B",
+            "name": "Make Them Odd",
+            "url": "https://codeforces.com/contest/1277/problem/B",
             "platform": "codeforces",
             "platformLabel": "CF",
-            "difficulty": "800",
-            "difficultyClass": "easy",
-            "solvedAt": "Jan 17, 2026",
-            "tags": [
-                "implementation"
-            ]
-        },
-        {
-            "name": "Twin Permutations",
-            "url": "https://codeforces.com/contest/1831/problem/A",
-            "platform": "codeforces",
-            "platformLabel": "CF",
-            "difficulty": "800",
-            "difficultyClass": "easy",
-            "solvedAt": "Jan 17, 2026",
-            "tags": [
-                "constructive algorithms"
-            ]
-        },
-        {
-            "name": "Unit Array",
-            "url": "https://codeforces.com/contest/1834/problem/A",
-            "platform": "codeforces",
-            "platformLabel": "CF",
-            "difficulty": "800",
-            "difficultyClass": "easy",
-            "solvedAt": "Jan 17, 2026",
+            "difficulty": "1200",
+            "difficultyClass": "medium",
+            "solvedAt": "Jan 18, 2026",
             "tags": [
                 "greedy",
-                "math"
+                "number theory"
             ]
         },
         {
-            "name": "Grasshopper on a Line",
-            "url": "https://codeforces.com/contest/1837/problem/A",
+            "name": "Chat Order",
+            "url": "https://codeforces.com/contest/637/problem/B",
             "platform": "codeforces",
             "platformLabel": "CF",
-            "difficulty": "800",
-            "difficultyClass": "easy",
-            "solvedAt": "Jan 16, 2026",
+            "difficulty": "1200",
+            "difficultyClass": "medium",
+            "solvedAt": "Jan 18, 2026",
             "tags": [
+                "*special",
+                "binary search",
                 "constructive algorithms",
-                "math"
+                "data structures",
+                "sortings"
             ]
         }
     ],
     "tag_counts": {
-        "constructive algorithms": 10,
-        "data structures": 1,
-        "implementation": 9,
-        "brute force": 7,
-        "bitmasks": 1,
+        "greedy": 47,
+        "math": 61,
+        "constructive algorithms": 19,
+        "implementation": 39,
+        "binary search": 7,
+        "brute force": 24,
+        "strings": 6,
+        "number theory": 25,
+        "*special": 1,
+        "data structures": 5,
+        "sortings": 13,
         "geometry": 1,
-        "greedy": 13,
-        "math": 23,
-        "binary search": 1,
-        "dfs and similar": 1,
-        "dp": 3,
-        "graphs": 1,
-        "number theory": 3,
-        "games": 3,
-        "sortings": 4,
-        "strings": 2,
-        "combinatorics": 1
+        "two pointers": 1,
+        "hashing": 1,
+        "combinatorics": 2,
+        "games": 2,
+        "dp": 2,
+        "graph matchings": 1,
+        "shortest paths": 1
     }
 }

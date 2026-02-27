@@ -43,6 +43,7 @@ function getStoredProfile() {
     cc: localStorage.getItem(STORAGE_CC_HANDLE) || '',
     ac: localStorage.getItem(STORAGE_AC_HANDLE) || '',
     gh: localStorage.getItem(STORAGE_GH_HANDLE) || ''
+    ac: localStorage.getItem(STORAGE_AC_HANDLE) || ''
   };
 }
 
@@ -60,7 +61,7 @@ function setModalOpen(isOpen) {
   nameModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
 }
 
-function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle, ghHandle }) {
+function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle }) {
   const trimmedName = (name || '').trim();
   if (trimmedName) {
     localStorage.setItem(STORAGE_NAME, trimmedName);
@@ -147,7 +148,7 @@ async function syncProfileFromSupabase() {
     if (!row) return;
 
     setUserProfile({
-      name: row.name || "Guest",
+      name: row.name || "Lakshit",
       cfHandle: row.codeforces || "Derxy",
       lcHandle: row.leetcode || "derxy",
       ccHandle: row.codechef || "derxy",
@@ -161,6 +162,7 @@ async function syncProfileFromSupabase() {
       cc: row.codechef || '',
       ac: row.atcoder || '',
       gh: getStoredProfile().gh
+      ac: row.atcoder || ''
     });
   } catch (error) {
     console.error("Failed to load profile from Supabase", error);
@@ -176,9 +178,10 @@ if (nameForm) {
       codeforces: cfHandleInput.value.trim() || "Derxy",
       leetcode: lcHandleInput.value.trim() || "derxy",
       codechef: ccHandleInput.value.trim() || "derxy",
-      atcoder: acHandleInput.value.trim() || "derxy"
+      atcoder: acHandleInput.value.trim() || "derxy",
+      github: ghHandleInput?.value.trim() || "LakshitOP"
     };
-    const ghHandle = ghHandleInput ? ghHandleInput.value.trim() : '';
+    
 
     try {
       await upsertProfile(profile);
