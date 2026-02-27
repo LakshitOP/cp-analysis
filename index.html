@@ -12,12 +12,14 @@
 <body>
     <div class="modal-overlay" id="name-modal" aria-hidden="true">
         <div class="modal glass-card">
-            <h2 class="modal-title">Welcome to CP Tracker</h2>
+            <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Close handle setup modal">✕</button>
+            <h2 class="modal-title">Set up your handles</h2>
+            <p class="modal-subtitle">You can edit these anytime.</p>
             <form id="name-form" class="modal-form">
                 <input
                     type="text"
                     id="name-input"
-                    placeholder="Your name (for greeting)"
+                    placeholder="Your name"
                     autocomplete="name"
                     required
                 >
@@ -36,7 +38,7 @@
                 <input
                     type="text"
                     id="ac-handle-input"
-                    placeholder="AtCoder handle (used via kenkoooo API)"
+                    placeholder="AtCoder handle"
                     autocomplete="off"
                 >
                 <input
@@ -45,7 +47,12 @@
                     placeholder="CodeChef handle"
                     autocomplete="off"
                 >
-                <p class="modal-hint">Handles are saved in Supabase. After saving, run <code>uv run python scraper.py</code> to refresh <code>data.json</code>.</p>
+                <input
+                    type="text"
+                    id="gh-handle-input"
+                    placeholder="GitHub username"
+                    autocomplete="off"
+                >
                 <div class="modal-actions">
                     <button type="submit" class="btn-primary">Save & Continue</button>
                 </div>
