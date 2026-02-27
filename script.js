@@ -42,8 +42,7 @@ function getStoredProfile() {
     lc: localStorage.getItem(STORAGE_LC_HANDLE) || '',
     cc: localStorage.getItem(STORAGE_CC_HANDLE) || '',
     ac: localStorage.getItem(STORAGE_AC_HANDLE) || '',
-    gh: localStorage.getItem(STORAGE_GH_HANDLE) || ''
-    ac: localStorage.getItem(STORAGE_AC_HANDLE) || ''
+    gh: localStorage.getItem(STORAGE_GH_HANDLE) || '',
   };
 }
 
@@ -61,11 +60,11 @@ function setModalOpen(isOpen) {
   nameModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
 }
 
-function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle }) {
+function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle, ghHandle }) {
   const trimmedName = (name || '').trim();
   if (trimmedName) {
     localStorage.setItem(STORAGE_NAME, trimmedName);
-    userNameEl.textContent = trimmedName;
+    if (userNameEl) userNameEl.textContent = trimmedName;
   }
 
   if (cfHandle !== undefined) {
@@ -97,7 +96,7 @@ function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle }) {
 
 function showGreeting() {
   const { name } = getStoredProfile();
-  userNameEl.textContent = name || 'Guest';
+  if (userNameEl) userNameEl.textContent = name || 'Guest';
 }
 
 function shouldAutoOpenSetupModal() {
@@ -161,8 +160,7 @@ async function syncProfileFromSupabase() {
       lc: row.leetcode || '',
       cc: row.codechef || '',
       ac: row.atcoder || '',
-      gh: getStoredProfile().gh
-      ac: row.atcoder || ''
+      gh: getStoredProfile().gh || ''
     });
   } catch (error) {
     console.error("Failed to load profile from Supabase", error);
@@ -191,7 +189,7 @@ if (nameForm) {
         lcHandle: profile.leetcode,
         ccHandle: profile.codechef,
         acHandle: profile.atcoder,
-        ghHandle
+        ghHandle: profile.github
       });
     } catch (error) {
       console.error("Failed to save profile to Supabase", error);
