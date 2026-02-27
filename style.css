@@ -142,6 +142,7 @@ html.theme-transitioning *::after {
 }
 
 .modal {
+    position: relative;
     max-width: 380px;
     width: 100%;
     padding: 2rem;
@@ -150,11 +151,49 @@ html.theme-transitioning *::after {
     box-shadow: var(--shadow);
 }
 
+.modal-close-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.15s;
+}
+
+.modal-close-btn:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.modal-close-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+    transform: scale(1.04);
+}
+
 .modal-title {
     margin: 0 0 1.25rem;
     font-size: 1.35rem;
     font-weight: 600;
     color: var(--text-primary);
+}
+
+.modal-subtitle {
+    margin: -0.8rem 0 1.15rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
 }
 
 .modal-form {
@@ -186,6 +225,7 @@ html.theme-transitioning *::after {
 .btn-primary {
     font: inherit;
     font-weight: 600;
+    width: 100%;
     padding: 0.75rem 1.25rem;
     border: none;
     border-radius: 10px;
@@ -201,22 +241,6 @@ html.theme-transitioning *::after {
 
 .btn-primary:active {
     transform: scale(0.98);
-}
-
-.modal-hint {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin: 0;
-    line-height: 1.45;
-}
-
-.modal-hint code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85em;
-    padding: 0.1em 0.35em;
-    border-radius: 4px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--glass-border);
 }
 
 .modal-actions {
