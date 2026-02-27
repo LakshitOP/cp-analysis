@@ -5,7 +5,9 @@ const STORAGE_LC_HANDLE = 'cp-tracker-lc-handle';
 const STORAGE_AC_HANDLE = 'cp-tracker-ac-handle';
 const STORAGE_CC_HANDLE = 'cp-tracker-cc-handle';
 const STORAGE_SETUP_DONE = 'cp-tracker-setup-done';
+const STORAGE_GH_HANDLE = 'cp-tracker-gh-handle';
 const DEFAULT_THEME = 'dark';
+const DEFAULT_GITHUB_HANDLE = 'LakshitOP';
 let platformCounts = { codeforces: 0, leetcode: 0, codechef: 0, atcoder: 0 };
 let difficultyData = [];
 let recentSubmissions = [];
@@ -18,6 +20,7 @@ const cfHandleInput = document.getElementById('cf-handle-input');
 const lcHandleInput = document.getElementById('lc-handle-input');
 const acHandleInput = document.getElementById('ac-handle-input');
 const ccHandleInput = document.getElementById('cc-handle-input');
+const ghHandleInput = document.getElementById('gh-handle-input');
 const modalCloseBtn = document.getElementById('modal-close-btn');
 const userNameEl = document.getElementById('user-name');
 
@@ -38,6 +41,8 @@ function getStoredProfile() {
     cf: localStorage.getItem(STORAGE_CF_HANDLE) || '',
     lc: localStorage.getItem(STORAGE_LC_HANDLE) || '',
     cc: localStorage.getItem(STORAGE_CC_HANDLE) || '',
+    ac: localStorage.getItem(STORAGE_AC_HANDLE) || '',
+    gh: localStorage.getItem(STORAGE_GH_HANDLE) || ''
     ac: localStorage.getItem(STORAGE_AC_HANDLE) || ''
   };
 }
@@ -48,6 +53,7 @@ function prefillProfileFields(profile = getStoredProfile()) {
   if (lcHandleInput) lcHandleInput.value = profile.lc || '';
   if (ccHandleInput) ccHandleInput.value = profile.cc || '';
   if (acHandleInput) acHandleInput.value = profile.ac || '';
+  if (ghHandleInput) ghHandleInput.value = profile.gh || '';
 }
 
 function setModalOpen(isOpen) {
@@ -78,9 +84,14 @@ function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle }) {
     const trimmed = ccHandle.trim();
     if (trimmed) localStorage.setItem(STORAGE_CC_HANDLE, trimmed);
   }
+  if (ghHandle !== undefined) {
+    const trimmed = ghHandle.trim();
+    if (trimmed) localStorage.setItem(STORAGE_GH_HANDLE, trimmed);
+  }
 
   localStorage.setItem(STORAGE_SETUP_DONE, 'true');
   showGreeting();
+  updateStreakImage(getStoredTheme());
   setModalOpen(false);
 }
 
@@ -149,6 +160,8 @@ async function syncProfileFromSupabase() {
       cf: row.codeforces || '',
       lc: row.leetcode || '',
       cc: row.codechef || '',
+      ac: row.atcoder || '',
+      gh: getStoredProfile().gh
       ac: row.atcoder || ''
     });
   } catch (error) {
@@ -165,8 +178,10 @@ if (nameForm) {
       codeforces: cfHandleInput.value.trim() || "Derxy",
       leetcode: lcHandleInput.value.trim() || "derxy",
       codechef: ccHandleInput.value.trim() || "derxy",
-      atcoder: acHandleInput.value.trim() || "derxy"
+      atcoder: acHandleInput.value.trim() || "derxy",
+      github: ghHandleInput?.value.trim() || "LakshitOP"
     };
+    
 
     try {
       await upsertProfile(profile);
@@ -175,7 +190,8 @@ if (nameForm) {
         cfHandle: profile.codeforces,
         lcHandle: profile.leetcode,
         ccHandle: profile.codechef,
-        acHandle: profile.atcoder
+        acHandle: profile.atcoder,
+        ghHandle
       });
     } catch (error) {
       console.error("Failed to save profile to Supabase", error);
@@ -191,6 +207,17 @@ const themeLabel = document.getElementById('theme-label');
 const streakImg = document.getElementById('streak-img');
 
 function getStoredTheme() { return localStorage.getItem(STORAGE_THEME) || DEFAULT_THEME; }
+function getGithubHandle() { return localStorage.getItem(STORAGE_GH_HANDLE) || DEFAULT_GITHUB_HANDLE; }
+function updateStreakImage(theme) {
+  if (!streakImg) return;
+  const streakTheme = theme === 'light' ? 'default' : 'dark';
+  const githubHandle = getGithubHandle();
+  streakImg.style.opacity = '0';
+  setTimeout(() => {
+    streakImg.src = `https://github-readme-streak-stats.herokuapp.com/?user=${encodeURIComponent(githubHandle)}&theme=${streakTheme}&hide_border=true&border_radius=5`;
+    streakImg.style.opacity = '1';
+  }, 150);
+}
 function applyTheme(theme) {
   // Add transition class for smooth theme change
   document.documentElement.classList.add('theme-transitioning');
@@ -198,15 +225,7 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
   if (themeToggle) themeToggle.checked = theme === 'light';
   if (themeLabel) themeLabel.textContent = theme === 'light' ? 'Light' : 'Dark';
-  const streakTheme = theme === 'light' ? 'default' : 'dark';
-  if (streakImg) {
-    // Fade out, update, fade in
-    streakImg.style.opacity = '0';
-    setTimeout(() => {
-      streakImg.src = `https://github-readme-streak-stats.herokuapp.com/?user=LakshitOP&theme=${streakTheme}&hide_border=true&border_radius=5`;
-      streakImg.style.opacity = '1';
-    }, 150);
-  }
+  updateStreakImage(theme);
   localStorage.setItem(STORAGE_THEME, theme);
   
   // Remove transition class after animation completes
