@@ -113,7 +113,7 @@ async function syncProfileFromSupabase() {
     if (!row) return;
 
     setUserProfile({
-      name: row.name || "Guest",
+      name: row.name || "Lakshit",
       cfHandle: row.codeforces || "Derxy",
       lcHandle: row.leetcode || "derxy",
       ccHandle: row.codechef || "derxy",
