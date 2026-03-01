@@ -301,7 +301,7 @@ if (sendLinkBtn) {
       const { error } = await supabase.auth.signInWithOtp({
   email,
   options: {
-    emailRedirectTo: "https://lakshitop.github.io/cp-analysis/"
+    emailRedirectTo: `${window.location.origin}${window.location.pathname}`
   }
 });
       if (error) throw error;
@@ -460,7 +460,12 @@ if (themeToggle) {
 
 async function loadStats() {
   try {
-    const res = await fetch('data.json');
+    const { cf, lc, cc, ac } = getStoredProfile();
+    const statsUrl = `/.netlify/functions/stats?cf=${encodeURIComponent(cf)}&lc=${encodeURIComponent(lc)}&cc=${encodeURIComponent(cc)}&ac=${encodeURIComponent(ac)}`;
+    let res = await fetch(statsUrl);
+    if (!res.ok) {
+      res = await fetch('data.json');
+    }
     const data = await res.json();
     if (data.platforms) {
       platformCounts = {
@@ -1341,4 +1346,3 @@ setAuthStage('auth');
 restoreSession().finally(() => {
   loadStats();
 });
-
