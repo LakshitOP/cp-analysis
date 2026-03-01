@@ -28,8 +28,29 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
 const supabase = createClient(
   "https://ssqujoxmtkbnjwsdfmpb.supabase.co",
-  "sb_publishable_Lar1r6YYzsuV07RLXJmJwA_gdRghveL"
+  "sb_publishable_Lar1r6YYzsuV07RLXJmJwA_gdRghveL",
+  {
+    auth: {
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true,
+      flowType: "pkce",
+    },
+  }
 );
+
+(async () => {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) {
+    console.error("Session restore failed:", error);
+  } else if (data.session) {
+    currentUser = data.session.user;
+    setAuthActionsVisible(true);
+    setAuthStage("profile");
+    await syncProfileFromSupabase(currentUser);
+    setModalOpen(false);
+  }
+})();
 
 function getUserName() {
   return localStorage.getItem(STORAGE_NAME) || '';
@@ -246,25 +267,23 @@ async function syncProfileFromSupabase(user) {
 
 // ADD HERE
 async function restoreSession() {
-  const { data, error } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getSession();
+
   if (error) {
-    console.error("Failed to restore session", error);
-    setAuthActionsVisible(false);
-    setAuthStage('auth');
+    console.error("Session restore failed:", error);
+    setAuthStage("auth");
     setModalOpen(true);
     return;
   }
 
-  currentUser = data?.user || null;
-  setAuthActionsVisible(Boolean(currentUser));
-
-  if (currentUser) {
-    setAuthStage('profile');
+  if (data?.session?.user) {
+    currentUser = data.session.user;
+    setAuthActionsVisible(true);
+    setAuthStage("profile");
     await syncProfileFromSupabase(currentUser);
     setModalOpen(false);
-    setAuthStatus('');
   } else {
-    setAuthStage('auth');
+    setAuthStage("auth");
     setModalOpen(true);
   }
 }
@@ -310,7 +329,9 @@ if (nameForm) {
       setModalOpen(true);
       return;
     }
-
+if (window.location.hash.includes("access_token")) {
+  history.replaceState({}, document.title, window.location.pathname);
+}
     // MODIFY HERE
     const profile = {
       user_id: currentUser.id,
