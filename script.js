@@ -41,14 +41,11 @@ const profileView = document.getElementById('profile-view');
 const authForm = document.getElementById('auth-form');
 const emailInput = document.getElementById('email-input');
 const sendOtpBtn = document.getElementById('send-otp-btn');
-const otpInput = document.getElementById('otp-input');
-const verifyOtpBtn = document.getElementById('verify-otp-btn');
 const authStatus = document.getElementById('auth-status');
 const editHandlesBtn = document.getElementById('edit-handles-btn');
 const logoutBtn = document.getElementById('logout-btn');
 
 let currentUser = null;
-let authEmail = '';
 
 function getStoredProfile() {
   return {
@@ -228,10 +225,7 @@ if (sendOtpBtn) {
       const { error } = await supabase.auth.signInWithOtp({ email });
       if (error) throw error;
 
-      authEmail = email;
-      if (otpInput) otpInput.disabled = false;
-      if (verifyOtpBtn) verifyOtpBtn.disabled = false;
-      setAuthStatus('OTP sent. Check your email.');
+      setAuthStatus('We sent you a sign-in link. Check your email.');
     } catch (error) {
       console.error("Failed to send OTP", error);
       setAuthStatus(error.message || 'Failed to send OTP.', true);
@@ -243,48 +237,6 @@ if (sendOtpBtn) {
 
 if (authForm) {
   authForm.addEventListener("submit", (e) => e.preventDefault());
-}
-
-if (verifyOtpBtn) {
-  verifyOtpBtn.addEventListener("click", async () => {
-    const email = authEmail || (emailInput?.value || '').trim();
-    const token = (otpInput?.value || '').trim();
-
-    if (!email) {
-      setAuthStatus('Enter your email and send OTP first.', true);
-      return;
-    }
-    if (!/^\d{6}$/.test(token)) {
-      setAuthStatus('Enter a valid 6-digit OTP.', true);
-      return;
-    }
-
-    verifyOtpBtn.disabled = true;
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: "email"
-      });
-      if (error) throw error;
-
-      const { data, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (!data?.user) throw new Error("No authenticated user found.");
-
-      currentUser = data.user;
-      setAuthActionsVisible(true);
-      setAuthStage('profile');
-      await syncProfileFromSupabase(currentUser);
-      setModalOpen(true);
-      setAuthStatus('');
-    } catch (error) {
-      console.error("Failed to verify OTP", error);
-      setAuthStatus(error.message || 'Failed to verify OTP.', true);
-    } finally {
-      verifyOtpBtn.disabled = false;
-    }
-  });
 }
 
 if (nameForm) {
@@ -339,10 +291,7 @@ if (logoutBtn) {
       console.error("Failed to logout", error);
     } finally {
       currentUser = null;
-      authEmail = '';
       if (authForm) authForm.reset();
-      if (otpInput) otpInput.disabled = true;
-      if (verifyOtpBtn) verifyOtpBtn.disabled = true;
       setAuthActionsVisible(false);
       setAuthStage('auth');
       setAuthStatus('');
@@ -352,17 +301,29 @@ if (logoutBtn) {
   });
 }
 
-supabase.auth.onAuthStateChange((_event, session) => {
-  if (!session?.user) {
-    currentUser = null;
-    setAuthActionsVisible(false);
-    setAuthStage('auth');
-    setModalOpen(true);
-    showGreeting();
-    return;
-  }
-  currentUser = session.user;
-  setAuthActionsVisible(true);
+supabase.auth.onAuthStateChange((event, session) => {
+  (async () => {
+    if (event === 'SIGNED_IN' && session?.user) {
+      currentUser = session.user;
+      setAuthActionsVisible(true);
+      setAuthStage('profile');
+      await syncProfileFromSupabase(currentUser);
+      setModalOpen(false);
+      setAuthStatus('');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      setAuthActionsVisible(false);
+      setAuthStage('auth');
+      setModalOpen(true);
+      showGreeting();
+    }
+  })().catch((error) => {
+    console.error("Failed handling auth state change", error);
+  });
 });
 
 const themeToggle = document.getElementById('theme-toggle');
