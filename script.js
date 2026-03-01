@@ -35,6 +35,21 @@ function getUserName() {
   return localStorage.getItem(STORAGE_NAME) || '';
 }
 
+// ADD HERE
+const authView = document.getElementById('auth-view');
+const profileView = document.getElementById('profile-view');
+const authForm = document.getElementById('auth-form');
+const emailInput = document.getElementById('email-input');
+const sendOtpBtn = document.getElementById('send-otp-btn');
+const otpInput = document.getElementById('otp-input');
+const verifyOtpBtn = document.getElementById('verify-otp-btn');
+const authStatus = document.getElementById('auth-status');
+const editHandlesBtn = document.getElementById('edit-handles-btn');
+const logoutBtn = document.getElementById('logout-btn');
+
+let currentUser = null;
+let authEmail = '';
+
 function getStoredProfile() {
   return {
     name: localStorage.getItem(STORAGE_NAME) || '',
@@ -58,6 +73,24 @@ function prefillProfileFields(profile = getStoredProfile()) {
 function setModalOpen(isOpen) {
   if (!nameModal) return;
   nameModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+}
+
+// ADD HERE
+function setAuthStatus(message, isError = false) {
+  if (!authStatus) return;
+  authStatus.textContent = message || '';
+  authStatus.style.color = isError ? 'var(--danger)' : 'var(--text-secondary)';
+}
+
+function setAuthStage(stage) {
+  if (authView) authView.hidden = stage !== 'auth';
+  if (profileView) profileView.hidden = stage !== 'profile';
+  if (modalCloseBtn) modalCloseBtn.hidden = stage === 'auth';
+}
+
+function setAuthActionsVisible(isLoggedIn) {
+  if (editHandlesBtn) editHandlesBtn.hidden = !isLoggedIn;
+  if (logoutBtn) logoutBtn.hidden = !isLoggedIn;
 }
 
 function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle, ghHandle }) {
@@ -96,30 +129,28 @@ function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle, ghHandle
 
 function showGreeting() {
   const { name } = getStoredProfile();
-  if (userNameEl) userNameEl.textContent = name || 'Guest';
-}
-
-function shouldAutoOpenSetupModal() {
-  const setupDone = localStorage.getItem(STORAGE_SETUP_DONE) === 'true';
-  const { cf, lc, cc, ac } = getStoredProfile();
-  return !setupDone && !(cf || lc || cc || ac);
+  if (userNameEl) userNameEl.textContent = currentUser ? (name || 'Guest') : 'Guest';
 }
 
 function openHandlesModal() {
+  if (!currentUser) return;
+  setAuthStage('profile');
   prefillProfileFields();
   setModalOpen(true);
 }
 
 function closeHandlesModal() {
+  if (!currentUser) return;
   setModalOpen(false);
 }
 
-async function getFirstProfileRow() {
+// MODIFY HERE
+async function getCurrentProfileRow(userId) {
+  if (!userId) return null;
   const { data, error } = await supabase
     .from("Profiles")
-    .select("id, name, codeforces, leetcode, codechef, atcoder")
-    .order("id", { ascending: true })
-    .limit(1)
+    .select("user_id, name, codeforces, leetcode, codechef, atcoder, github")
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (error) throw error;
@@ -127,31 +158,23 @@ async function getFirstProfileRow() {
 }
 
 async function upsertProfile(profile) {
-  const row = await getFirstProfileRow();
-  if (row?.id) {
-    const { error } = await supabase
-      .from("Profiles")
-      .update(profile)
-      .eq("id", row.id);
-    if (error) throw error;
-    return;
-  }
-
-  const { error } = await supabase.from("Profiles").insert(profile);
+  const { error } = await supabase.from("Profiles").upsert(profile);
   if (error) throw error;
 }
 
-async function syncProfileFromSupabase() {
+async function syncProfileFromSupabase(user) {
+  if (!user?.id) return;
   try {
-    const row = await getFirstProfileRow();
+    const row = await getCurrentProfileRow(user.id);
     if (!row) return;
 
     setUserProfile({
-      name: row.name || "Lakshit",
-      cfHandle: row.codeforces || "Derxy",
-      lcHandle: row.leetcode || "derxy",
-      ccHandle: row.codechef || "derxy",
-      acHandle: row.atcoder || "derxy"
+      name: row.name || '',
+      cfHandle: row.codeforces || '',
+      lcHandle: row.leetcode || '',
+      ccHandle: row.codechef || '',
+      acHandle: row.atcoder || '',
+      ghHandle: row.github || ''
     });
 
     prefillProfileFields({
@@ -160,26 +183,130 @@ async function syncProfileFromSupabase() {
       lc: row.leetcode || '',
       cc: row.codechef || '',
       ac: row.atcoder || '',
-      gh: getStoredProfile().gh || ''
+      gh: row.github || ''
     });
   } catch (error) {
     console.error("Failed to load profile from Supabase", error);
   }
 }
 
+// ADD HERE
+async function restoreSession() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) {
+    console.error("Failed to restore session", error);
+    setAuthActionsVisible(false);
+    setAuthStage('auth');
+    setModalOpen(true);
+    return;
+  }
+
+  currentUser = data?.user || null;
+  setAuthActionsVisible(Boolean(currentUser));
+
+  if (currentUser) {
+    setAuthStage('profile');
+    await syncProfileFromSupabase(currentUser);
+    setModalOpen(false);
+    setAuthStatus('');
+  } else {
+    setAuthStage('auth');
+    setModalOpen(true);
+  }
+}
+
+if (sendOtpBtn) {
+  sendOtpBtn.addEventListener("click", async () => {
+    const email = (emailInput?.value || '').trim();
+    if (!email) {
+      setAuthStatus('Enter a valid email address.', true);
+      return;
+    }
+
+    sendOtpBtn.disabled = true;
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      if (error) throw error;
+
+      authEmail = email;
+      if (otpInput) otpInput.disabled = false;
+      if (verifyOtpBtn) verifyOtpBtn.disabled = false;
+      setAuthStatus('OTP sent. Check your email.');
+    } catch (error) {
+      console.error("Failed to send OTP", error);
+      setAuthStatus(error.message || 'Failed to send OTP.', true);
+    } finally {
+      sendOtpBtn.disabled = false;
+    }
+  });
+}
+
+if (authForm) {
+  authForm.addEventListener("submit", (e) => e.preventDefault());
+}
+
+if (verifyOtpBtn) {
+  verifyOtpBtn.addEventListener("click", async () => {
+    const email = authEmail || (emailInput?.value || '').trim();
+    const token = (otpInput?.value || '').trim();
+
+    if (!email) {
+      setAuthStatus('Enter your email and send OTP first.', true);
+      return;
+    }
+    if (!/^\d{6}$/.test(token)) {
+      setAuthStatus('Enter a valid 6-digit OTP.', true);
+      return;
+    }
+
+    verifyOtpBtn.disabled = true;
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "email"
+      });
+      if (error) throw error;
+
+      const { data, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!data?.user) throw new Error("No authenticated user found.");
+
+      currentUser = data.user;
+      setAuthActionsVisible(true);
+      setAuthStage('profile');
+      await syncProfileFromSupabase(currentUser);
+      setModalOpen(true);
+      setAuthStatus('');
+    } catch (error) {
+      console.error("Failed to verify OTP", error);
+      setAuthStatus(error.message || 'Failed to verify OTP.', true);
+    } finally {
+      verifyOtpBtn.disabled = false;
+    }
+  });
+}
+
 if (nameForm) {
   nameForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (!currentUser?.id) {
+      setAuthStage('auth');
+      setAuthStatus('Sign in first to save profile.', true);
+      setModalOpen(true);
+      return;
+    }
 
+    // MODIFY HERE
     const profile = {
-      name: nameInput.value.trim() || "Guest",
-      codeforces: cfHandleInput.value.trim() || "Derxy",
-      leetcode: lcHandleInput.value.trim() || "derxy",
-      codechef: ccHandleInput.value.trim() || "derxy",
-      atcoder: acHandleInput.value.trim() || "derxy",
-      github: ghHandleInput?.value.trim() || "LakshitOP"
+      user_id: currentUser.id,
+      name: nameInput.value.trim(),
+      codeforces: cfHandleInput.value.trim(),
+      leetcode: lcHandleInput.value.trim(),
+      codechef: ccHandleInput.value.trim(),
+      atcoder: acHandleInput.value.trim(),
+      github: ghHandleInput?.value.trim() || ""
     };
-    
 
     try {
       await upsertProfile(profile);
@@ -191,15 +318,53 @@ if (nameForm) {
         acHandle: profile.atcoder,
         ghHandle: profile.github
       });
+      setAuthStatus('');
+      setAuthStage('profile');
     } catch (error) {
       console.error("Failed to save profile to Supabase", error);
+      setAuthStatus(error.message || 'Failed to save profile.', true);
+      setModalOpen(true);
     }
   });
 }
 
-const editHandlesBtn = document.getElementById('edit-handles-btn');
 if (editHandlesBtn) editHandlesBtn.addEventListener('click', openHandlesModal);
 if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeHandlesModal);
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error("Failed to logout", error);
+    } finally {
+      currentUser = null;
+      authEmail = '';
+      if (authForm) authForm.reset();
+      if (otpInput) otpInput.disabled = true;
+      if (verifyOtpBtn) verifyOtpBtn.disabled = true;
+      setAuthActionsVisible(false);
+      setAuthStage('auth');
+      setAuthStatus('');
+      setModalOpen(true);
+      showGreeting();
+    }
+  });
+}
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  if (!session?.user) {
+    currentUser = null;
+    setAuthActionsVisible(false);
+    setAuthStage('auth');
+    setModalOpen(true);
+    showGreeting();
+    return;
+  }
+  currentUser = session.user;
+  setAuthActionsVisible(true);
+});
+
 const themeToggle = document.getElementById('theme-toggle');
 const themeLabel = document.getElementById('theme-label');
 const streakImg = document.getElementById('streak-img');
@@ -1121,8 +1286,9 @@ function renderTagAnalysis() {
 applyTheme(getStoredTheme());
 showGreeting();
 prefillProfileFields();
-setModalOpen(shouldAutoOpenSetupModal());
-syncProfileFromSupabase().finally(() => {
+setAuthActionsVisible(false);
+setAuthStage('auth');
+restoreSession().finally(() => {
   loadStats();
 });
 

@@ -12,51 +12,83 @@
 <body>
     <div class="modal-overlay" id="name-modal" aria-hidden="true">
         <div class="modal glass-card">
-            <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Close handle setup modal">✕</button>
-            <h2 class="modal-title">Set up your handles</h2>
-            <p class="modal-subtitle">You can edit these anytime.</p>
-            <form id="name-form" class="modal-form">
-                <input
-                    type="text"
-                    id="name-input"
-                    placeholder="Your name"
-                    autocomplete="name"
-                    required
-                >
-                <input
-                    type="text"
-                    id="cf-handle-input"
-                    placeholder="Codeforces handle"
-                    autocomplete="off"
-                >
-                <input
-                    type="text"
-                    id="lc-handle-input"
-                    placeholder="LeetCode handle"
-                    autocomplete="off"
-                >
-                <input
-                    type="text"
-                    id="ac-handle-input"
-                    placeholder="AtCoder handle"
-                    autocomplete="off"
-                >
-                <input
-                    type="text"
-                    id="cc-handle-input"
-                    placeholder="CodeChef handle"
-                    autocomplete="off"
-                >
-                <input
-                    type="text"
-                    id="gh-handle-input"
-                    placeholder="GitHub username"
-                    autocomplete="off"
-                >
-                <div class="modal-actions">
-                    <button type="submit" class="btn-primary">Save & Continue</button>
-                </div>
-            </form>
+            <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Close handle setup modal">x</button>
+
+            <!-- ADD HERE -->
+            <div id="auth-view">
+                <h2 class="modal-title">Sign in</h2>
+                <p class="modal-subtitle">Use email OTP only.</p>
+                <form id="auth-form" class="modal-form">
+                    <input
+                        type="email"
+                        id="email-input"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required
+                    >
+                    <button type="button" id="send-otp-btn" class="btn-primary">Send OTP</button>
+                    <input
+                        type="text"
+                        id="otp-input"
+                        placeholder="6-digit OTP"
+                        inputmode="numeric"
+                        pattern="[0-9]{6}"
+                        maxlength="6"
+                        autocomplete="one-time-code"
+                        disabled
+                    >
+                    <button type="button" id="verify-otp-btn" class="btn-primary" disabled>Verify OTP</button>
+                    <p id="auth-status" class="modal-subtitle"></p>
+                </form>
+            </div>
+
+            <!-- MODIFY HERE -->
+            <div id="profile-view" hidden>
+                <h2 class="modal-title">Set up your handles</h2>
+                <p class="modal-subtitle">You can edit these anytime.</p>
+                <form id="name-form" class="modal-form">
+                    <input
+                        type="text"
+                        id="name-input"
+                        placeholder="Your name"
+                        autocomplete="name"
+                        required
+                    >
+                    <input
+                        type="text"
+                        id="cf-handle-input"
+                        placeholder="Codeforces handle"
+                        autocomplete="off"
+                    >
+                    <input
+                        type="text"
+                        id="lc-handle-input"
+                        placeholder="LeetCode handle"
+                        autocomplete="off"
+                    >
+                    <input
+                        type="text"
+                        id="ac-handle-input"
+                        placeholder="AtCoder handle"
+                        autocomplete="off"
+                    >
+                    <input
+                        type="text"
+                        id="cc-handle-input"
+                        placeholder="CodeChef handle"
+                        autocomplete="off"
+                    >
+                    <input
+                        type="text"
+                        id="gh-handle-input"
+                        placeholder="GitHub username"
+                        autocomplete="off"
+                    >
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-primary">Save & Continue</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -68,6 +100,8 @@
             </div>
             <div class="header-right">
                 <button type="button" class="btn-edit-handles" id="edit-handles-btn" aria-label="Edit handles and name">Edit handles</button>
+                <!-- ADD HERE -->
+                <button type="button" class="btn-edit-handles" id="logout-btn" aria-label="Logout" hidden>Logout</button>
                 <span class="theme-label" id="theme-label">Dark</span>
                 <label class="toggle" aria-label="Toggle dark/light mode">
                     <input type="checkbox" id="theme-toggle" aria-checked="false">
@@ -206,5 +240,3 @@
     <script type="module" src="script.js"></script>
 </body>
 </html>
-
-
