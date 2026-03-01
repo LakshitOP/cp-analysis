@@ -119,7 +119,12 @@ html.theme-transitioning *::after {
     visibility: visible;
     transition: opacity 0.25s ease, visibility 0.25s ease;
 }
-
+.modal-niche {
+    margin: -0.8rem 0 1.15rem;
+    padding-top: 29px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
 .modal-overlay:not([aria-hidden="true"]) .modal {
     animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
