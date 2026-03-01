@@ -17,7 +17,14 @@
             <!-- ADD HERE -->
             <div id="auth-view">
                 <h2 class="modal-title" id="auth-title">Sign in</h2>
-                <p class="modal-subtitle" id="auth-subtitle">Enter your credentials.</p>
+                <p class="modal-subtitle" id="auth-subtitle">Choose sign-in method and enter your credentials.</p>
+                <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;">
+                    <label for="auth-method" style="font-size:.85rem;color:var(--text-secondary);">Method:</label>
+                    <select id="auth-method" style="padding:.35rem .5rem;border-radius:6px;background:var(--input-bg);color:var(--text-primary);border:1px solid var(--bg-card-border);">
+                        <option value="password">Password</option>
+                        <option value="magic">Email link</option>
+                    </select>
+                </div>
                 <form id="auth-form" class="modal-form">
                     <input
                         type="email"
