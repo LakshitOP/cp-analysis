@@ -16,8 +16,8 @@
 
             <!-- ADD HERE -->
             <div id="auth-view">
-                <h2 class="modal-title">Sign in</h2>
-                <p class="modal-subtitle">Use your email sign-in link.</p>
+                <h2 class="modal-title" id="auth-title">Sign in</h2>
+                <p class="modal-subtitle" id="auth-subtitle">Enter your credentials.</p>
                 <form id="auth-form" class="modal-form">
                     <input
                         type="email"
@@ -26,9 +26,20 @@
                         autocomplete="email"
                         required
                     >
-                    <button type="button" id="send-link-btn" class="btn-primary">Send sign-in link</button>
-                    <p id="auth-status" class="modal-subtitle"></p>
+                    <input
+                        type="password"
+                        id="password-input"
+                        placeholder="Password"
+                        autocomplete="current-password"
+                        required
+                    >
+                    <button type="submit" id="auth-submit-btn" class="btn-primary">Sign in</button>
                 </form>
+                <p class="modal-subtitle">
+                    <a href="#" id="switch-auth-mode">Don't have an account? Sign up</a>
+                </p>
+                <button type="button" id="resend-confirm-btn" class="btn-secondary" hidden>Resend confirmation email</button>
+                <p id="auth-status" class="modal-subtitle"></p>
             </div>
 
             <!-- MODIFY HERE -->
@@ -65,12 +76,6 @@
                         type="text"
                         id="cc-handle-input"
                         placeholder="CodeChef handle"
-                        autocomplete="off"
-                    >
-                    <input
-                        type="text"
-                        id="gh-handle-input"
-                        placeholder="GitHub username"
                         autocomplete="off"
                     >
                     <div class="modal-actions">
@@ -146,18 +151,6 @@
                     <div class="streak-label">days</div>
                 </div>
 
-                <!-- GitHub Streak -->
-                <div class="card glass-card streak-card">
-                    <h3 class="card-title">GitHub Streak</h3>
-                    <div class="streak-wrap">
-                        <img
-                            id="streak-img"
-                            src="https://github-readme-streak-stats.herokuapp.com/?user=LakshitOP&theme=dark&hide_border=true&border_radius=5"
-                            alt="GitHub streak stats"
-                            class="streak-img"
-                        >
-                    </div>
-                </div>
 
                 <!-- Contribution Heatmap -->
                 <div class="card glass-card heatmap-card">

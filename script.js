@@ -5,9 +5,7 @@ const STORAGE_LC_HANDLE = 'cp-tracker-lc-handle';
 const STORAGE_AC_HANDLE = 'cp-tracker-ac-handle';
 const STORAGE_CC_HANDLE = 'cp-tracker-cc-handle';
 const STORAGE_SETUP_DONE = 'cp-tracker-setup-done';
-const STORAGE_GH_HANDLE = 'cp-tracker-gh-handle';
 const DEFAULT_THEME = 'dark';
-const DEFAULT_GITHUB_HANDLE = 'LakshitOP';
 let platformCounts = { codeforces: 0, leetcode: 0, codechef: 0, atcoder: 0 };
 let difficultyData = [];
 let recentSubmissions = [];
@@ -20,7 +18,6 @@ const cfHandleInput = document.getElementById('cf-handle-input');
 const lcHandleInput = document.getElementById('lc-handle-input');
 const acHandleInput = document.getElementById('ac-handle-input');
 const ccHandleInput = document.getElementById('cc-handle-input');
-const ghHandleInput = document.getElementById('gh-handle-input');
 const modalCloseBtn = document.getElementById('modal-close-btn');
 const userNameEl = document.getElementById('user-name');
 
@@ -61,7 +58,12 @@ const authView = document.getElementById('auth-view');
 const profileView = document.getElementById('profile-view');
 const authForm = document.getElementById('auth-form');
 const emailInput = document.getElementById('email-input');
-const sendLinkBtn = document.getElementById('send-link-btn');
+const passwordInput = document.getElementById('password-input');
+const authSubmitBtn = document.getElementById('auth-submit-btn');
+const switchAuthModeLink = document.getElementById('switch-auth-mode');
+const resendConfirmBtn = document.getElementById('resend-confirm-btn');
+const authTitle = document.getElementById('auth-title');
+const authSubtitle = document.getElementById('auth-subtitle');
 const authStatus = document.getElementById('auth-status');
 const editHandlesBtn = document.getElementById('edit-handles-btn');
 const logoutBtn = document.getElementById('logout-btn');
@@ -74,8 +76,7 @@ function getStoredProfile() {
     cf: localStorage.getItem(STORAGE_CF_HANDLE) || '',
     lc: localStorage.getItem(STORAGE_LC_HANDLE) || '',
     cc: localStorage.getItem(STORAGE_CC_HANDLE) || '',
-    ac: localStorage.getItem(STORAGE_AC_HANDLE) || '',
-    gh: localStorage.getItem(STORAGE_GH_HANDLE) || '',
+    ac: localStorage.getItem(STORAGE_AC_HANDLE) || ''
   };
 }
 
@@ -85,7 +86,6 @@ function prefillProfileFields(profile = getStoredProfile()) {
   if (lcHandleInput) lcHandleInput.value = profile.lc || '';
   if (ccHandleInput) ccHandleInput.value = profile.cc || '';
   if (acHandleInput) acHandleInput.value = profile.ac || '';
-  if (ghHandleInput) ghHandleInput.value = profile.gh || '';
 }
 
 function setModalOpen(isOpen) {
@@ -100,62 +100,8 @@ function setAuthStatus(message, isError = false) {
   authStatus.style.color = isError ? 'var(--danger)' : 'var(--text-secondary)';
 }
 
-function openMagicLinkWindow(email) {
-  const popup = window.open('', 'magic-link-window', 'width=460,height=560');
-  if (!popup) return false;
-
-  const safeEmail = (email || '').replace(/[&<>"']/g, (char) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[char]));
-
-  popup.document.open();
-  popup.document.write(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Check your email</title>
-      <style>
-        body {
-          margin: 0;
-          font-family: "DM Sans", sans-serif;
-          background: #0f131a;
-          color: #e6eaf2;
-          display: grid;
-          place-items: center;
-          min-height: 100vh;
-        }
-        .card {
-          width: min(380px, 90vw);
-          padding: 24px;
-          border-radius: 14px;
-          background: #1a202c;
-          border: 1px solid #2d3748;
-        }
-        h1 { margin: 0 0 12px; font-size: 22px; }
-        p { margin: 0 0 10px; line-height: 1.5; color: #c9d2e3; }
-        .email { color: #8fc5ff; word-break: break-word; }
-      </style>
-    </head>
-    <body>
-      <div class="card">
-        <h1>Sign-in link sent</h1>
-        <p>We sent a magic sign-in link to:</p>
-        <p class="email">${safeEmail}</p>
-        <p>Open your inbox, click the link, and come back to this app.</p>
-      </div>
-    </body>
-    </html>
-  `);
-  popup.document.close();
-  popup.focus();
-  return true;
-}
+// magic-link helper removed; using email/password flows now.
+// email+password sign-up / sign-in does not require a popup or redirect.
 
 function setAuthStage(stage) {
   if (authView) authView.hidden = stage !== 'auth';
@@ -198,7 +144,7 @@ function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle, ghHandle
 
   localStorage.setItem(STORAGE_SETUP_DONE, 'true');
   showGreeting();
-  updateStreakImage(getStoredTheme());
+  // removed github streak call
   setModalOpen(false);
 }
 
@@ -249,7 +195,7 @@ async function syncProfileFromSupabase(user) {
       lcHandle: row.leetcode || '',
       ccHandle: row.codechef || '',
       acHandle: row.atcoder || '',
-      ghHandle: row.github || ''
+      // github field removed
     });
 
     prefillProfileFields({
@@ -258,8 +204,7 @@ async function syncProfileFromSupabase(user) {
       lc: row.leetcode || '',
       cc: row.codechef || '',
       ac: row.atcoder || '',
-      gh: row.github || ''
-    });
+      });
   } catch (error) {
     console.error("Failed to load profile from Supabase", error);
   }
@@ -288,41 +233,112 @@ async function restoreSession() {
   }
 }
 
-if (sendLinkBtn) {
-  sendLinkBtn.addEventListener("click", async () => {
-    const email = (emailInput?.value || '').trim();
-    if (!email) {
-      setAuthStatus('Enter a valid email address.', true);
-      return;
-    }
+// authentication mode can be 'signin' or 'signup'
+let authMode = 'signin';
 
-    sendLinkBtn.disabled = true;
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-  email,
-  options: {
-    emailRedirectTo: `${window.location.origin}${window.location.pathname}`
+function updateAuthUI() {
+  if (!authTitle || !authSubtitle || !authSubmitBtn || !switchAuthModeLink) return;
+  if (authMode === 'signin') {
+    authTitle.textContent = 'Sign in';
+    authSubtitle.textContent = 'Enter your credentials.';
+    authSubmitBtn.textContent = 'Sign in';
+    switchAuthModeLink.textContent = "Don't have an account? Sign up";
+  } else {
+    authTitle.textContent = 'Sign up';
+    authSubtitle.textContent = 'Create your account.';
+    authSubmitBtn.textContent = 'Sign up';
+    switchAuthModeLink.textContent = 'Already have an account? Sign in';
   }
-});
-      if (error) throw error;
+}
 
-      const opened = openMagicLinkWindow(email);
-      setAuthStatus(
-        opened
-          ? 'We sent you a sign-in link. Check your email.'
-          : 'We sent you a sign-in link. Check your email (enable popups to see the separate window).'
-      );
-    } catch (error) {
-      console.error("Failed to send sign-in link", error);
-      setAuthStatus(error.message || 'Failed to send sign-in link.', true);
-    } finally {
-      sendLinkBtn.disabled = false;
+async function showVerificationNotice() {
+  if (!authTitle || !authSubtitle || !authForm || !switchAuthModeLink) return;
+  authTitle.textContent = 'Verify your email';
+  authSubtitle.textContent = 'A confirmation email has been sent. Please check your inbox.';
+  // disable all input elements and hide mode toggle while waiting for verification
+  Array.from(authForm.elements).forEach(el => el.disabled = true);
+  switchAuthModeLink.hidden = true;
+  if (resendConfirmBtn) {
+    resendConfirmBtn.hidden = false;
+    resendConfirmBtn.disabled = false;
+  }
+}
+
+async function handleAuthSubmit(e) {
+  e.preventDefault();
+  const email = (emailInput?.value || '').trim();
+  const password = (passwordInput?.value || '');
+  if (!email || !password) {
+    setAuthStatus('Please enter both email and password.', true);
+    return;
+  }
+
+  authSubmitBtn.disabled = true;
+  try {
+    if (authMode === 'signup') {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+      // show a dedicated message instead of reverting right away
+      setAuthStatus('');
+      await showVerificationNotice();
+      return;
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      // session handling continues in onAuthStateChange; clear any status text
+      setAuthStatus('');
+    }
+  } catch (error) {
+    console.error('Authentication error', error);
+    setAuthStatus(error.message || 'Authentication failed.', true);
+  } finally {
+    authSubmitBtn.disabled = false;
+  }
+}
+
+if (authForm) {
+  authForm.addEventListener('submit', handleAuthSubmit);
+}
+
+if (switchAuthModeLink) {
+  switchAuthModeLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    authMode = authMode === 'signin' ? 'signup' : 'signin';
+    updateAuthUI();
+    setAuthStatus('');
+    // restore inputs in case they were disabled by verification notice
+    if (authForm) {
+      Array.from(authForm.elements).forEach(el => el.disabled = false);
+    }
+    switchAuthModeLink.hidden = false;
+    if (resendConfirmBtn) {
+      resendConfirmBtn.hidden = true;
     }
   });
 }
 
-if (authForm) {
-  authForm.addEventListener("submit", (e) => e.preventDefault());
+updateAuthUI();
+
+// setup resend confirmation handler
+if (resendConfirmBtn) {
+  resendConfirmBtn.addEventListener('click', async () => {
+    const email = (emailInput?.value || '').trim();
+    if (!email) {
+      setAuthStatus('Enter your email to resend confirmation.', true);
+      return;
+    }
+    resendConfirmBtn.disabled = true;
+    try {
+      const { error } = await supabase.auth.resend({ email });
+      if (error) throw error;
+      setAuthStatus('Confirmation email resent.');
+    } catch (err) {
+      console.error('Resend error', err);
+      setAuthStatus(err.message || 'Unable to resend confirmation.', true);
+    } finally {
+      resendConfirmBtn.disabled = false;
+    }
+  });
 }
 
 if (nameForm) {
@@ -345,7 +361,7 @@ if (window.location.hash.includes("access_token")) {
       leetcode: lcHandleInput.value.trim(),
       codechef: ccHandleInput.value.trim(),
       atcoder: acHandleInput.value.trim(),
-      github: ghHandleInput?.value.trim() || ""
+      // github removed
     };
 
     try {
@@ -356,7 +372,6 @@ if (window.location.hash.includes("access_token")) {
         lcHandle: profile.leetcode,
         ccHandle: profile.codechef,
         acHandle: profile.atcoder,
-        ghHandle: profile.github
       });
       setAuthStatus('');
       setAuthStage('profile');
@@ -420,17 +435,7 @@ const themeLabel = document.getElementById('theme-label');
 const streakImg = document.getElementById('streak-img');
 
 function getStoredTheme() { return localStorage.getItem(STORAGE_THEME) || DEFAULT_THEME; }
-function getGithubHandle() { return localStorage.getItem(STORAGE_GH_HANDLE) || DEFAULT_GITHUB_HANDLE; }
-function updateStreakImage(theme) {
-  if (!streakImg) return;
-  const streakTheme = theme === 'light' ? 'default' : 'dark';
-  const githubHandle = getGithubHandle();
-  streakImg.style.opacity = '0';
-  setTimeout(() => {
-    streakImg.src = `https://github-readme-streak-stats.herokuapp.com/?user=${encodeURIComponent(githubHandle)}&theme=${streakTheme}&hide_border=true&border_radius=5`;
-    streakImg.style.opacity = '1';
-  }, 150);
-}
+// GitHub streak widget removed; no longer used.
 function applyTheme(theme) {
   // Add transition class for smooth theme change
   document.documentElement.classList.add('theme-transitioning');
@@ -438,7 +443,6 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
   if (themeToggle) themeToggle.checked = theme === 'light';
   if (themeLabel) themeLabel.textContent = theme === 'light' ? 'Light' : 'Dark';
-  updateStreakImage(theme);
   localStorage.setItem(STORAGE_THEME, theme);
   
   // Remove transition class after animation completes
