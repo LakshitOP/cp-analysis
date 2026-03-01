@@ -298,7 +298,12 @@ if (sendLinkBtn) {
 
     sendLinkBtn.disabled = true;
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email });
+      const { error } = await supabase.auth.signInWithOtp({
+  email,
+  options: {
+    emailRedirectTo: "https://lakshitop.github.io/cp-analysis/"
+  }
+});
       if (error) throw error;
 
       const opened = openMagicLinkWindow(email);
