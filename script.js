@@ -40,7 +40,7 @@ const authView = document.getElementById('auth-view');
 const profileView = document.getElementById('profile-view');
 const authForm = document.getElementById('auth-form');
 const emailInput = document.getElementById('email-input');
-const sendOtpBtn = document.getElementById('send-otp-btn');
+const sendLinkBtn = document.getElementById('send-link-btn');
 const authStatus = document.getElementById('auth-status');
 const editHandlesBtn = document.getElementById('edit-handles-btn');
 const logoutBtn = document.getElementById('logout-btn');
@@ -77,6 +77,63 @@ function setAuthStatus(message, isError = false) {
   if (!authStatus) return;
   authStatus.textContent = message || '';
   authStatus.style.color = isError ? 'var(--danger)' : 'var(--text-secondary)';
+}
+
+function openMagicLinkWindow(email) {
+  const popup = window.open('', 'magic-link-window', 'width=460,height=560');
+  if (!popup) return false;
+
+  const safeEmail = (email || '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+
+  popup.document.open();
+  popup.document.write(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Check your email</title>
+      <style>
+        body {
+          margin: 0;
+          font-family: "DM Sans", sans-serif;
+          background: #0f131a;
+          color: #e6eaf2;
+          display: grid;
+          place-items: center;
+          min-height: 100vh;
+        }
+        .card {
+          width: min(380px, 90vw);
+          padding: 24px;
+          border-radius: 14px;
+          background: #1a202c;
+          border: 1px solid #2d3748;
+        }
+        h1 { margin: 0 0 12px; font-size: 22px; }
+        p { margin: 0 0 10px; line-height: 1.5; color: #c9d2e3; }
+        .email { color: #8fc5ff; word-break: break-word; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <h1>Sign-in link sent</h1>
+        <p>We sent a magic sign-in link to:</p>
+        <p class="email">${safeEmail}</p>
+        <p>Open your inbox, click the link, and come back to this app.</p>
+      </div>
+    </body>
+    </html>
+  `);
+  popup.document.close();
+  popup.focus();
+  return true;
 }
 
 function setAuthStage(stage) {
@@ -212,25 +269,30 @@ async function restoreSession() {
   }
 }
 
-if (sendOtpBtn) {
-  sendOtpBtn.addEventListener("click", async () => {
+if (sendLinkBtn) {
+  sendLinkBtn.addEventListener("click", async () => {
     const email = (emailInput?.value || '').trim();
     if (!email) {
       setAuthStatus('Enter a valid email address.', true);
       return;
     }
 
-    sendOtpBtn.disabled = true;
+    sendLinkBtn.disabled = true;
     try {
       const { error } = await supabase.auth.signInWithOtp({ email });
       if (error) throw error;
 
-      setAuthStatus('We sent you a sign-in link. Check your email.');
+      const opened = openMagicLinkWindow(email);
+      setAuthStatus(
+        opened
+          ? 'We sent you a sign-in link. Check your email.'
+          : 'We sent you a sign-in link. Check your email (enable popups to see the separate window).'
+      );
     } catch (error) {
-      console.error("Failed to send OTP", error);
-      setAuthStatus(error.message || 'Failed to send OTP.', true);
+      console.error("Failed to send sign-in link", error);
+      setAuthStatus(error.message || 'Failed to send sign-in link.', true);
     } finally {
-      sendOtpBtn.disabled = false;
+      sendLinkBtn.disabled = false;
     }
   });
 }
@@ -300,6 +362,7 @@ if (logoutBtn) {
     }
   });
 }
+
 
 supabase.auth.onAuthStateChange((event, session) => {
   (async () => {

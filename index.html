@@ -17,7 +17,7 @@
             <!-- ADD HERE -->
             <div id="auth-view">
                 <h2 class="modal-title">Sign in</h2>
-                <p class="modal-subtitle">Use email OTP only.</p>
+                <p class="modal-subtitle">Use your email sign-in link.</p>
                 <form id="auth-form" class="modal-form">
                     <input
                         type="email"
@@ -26,18 +26,7 @@
                         autocomplete="email"
                         required
                     >
-                    <button type="button" id="send-otp-btn" class="btn-primary">Send OTP</button>
-                    <input
-                        type="text"
-                        id="otp-input"
-                        placeholder="6-digit OTP"
-                        inputmode="numeric"
-                        pattern="[0-9]{6}"
-                        maxlength="6"
-                        autocomplete="one-time-code"
-                        disabled
-                    >
-                    <button type="button" id="verify-otp-btn" class="btn-primary" disabled>Verify OTP</button>
+                    <button type="button" id="send-link-btn" class="btn-primary">Send sign-in link</button>
                     <p id="auth-status" class="modal-subtitle"></p>
                 </form>
             </div>
