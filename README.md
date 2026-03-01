@@ -1,5 +1,5 @@
 You can access my file via this link
-https://lakshitop.github.io/cp-analysis/
+[https://lakshitop.github.io/cp-analysis/](https://cp-analysis.netlify.app/)
 
 
 ## Netlify deployment
