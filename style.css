@@ -1107,6 +1107,45 @@ html.theme-transitioning *::after {
     display: block;
 }
 
+/* ========== Data Loading Screen ========== */
+.data-loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-primary);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.data-loading-overlay[aria-hidden="true"] {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loading-screen-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.loading-text {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
 /* ========== Responsive ========== */
 @media (max-width: 768px) {
     .dashboard {

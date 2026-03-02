@@ -531,7 +531,14 @@ if (themeToggle) {
   });
 }
 
+function setDataLoadingVisible(isVisible) {
+  const overlay = document.getElementById('data-loading-overlay');
+  if (!overlay) return;
+  overlay.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
+}
+
 async function loadStats() {
+  setDataLoadingVisible(true);
   try {
     const { cf, lc, cc, ac } = getStoredProfile();
     const statsUrl = `/.netlify/functions/stats?cf=${encodeURIComponent(cf)}&lc=${encodeURIComponent(lc)}&cc=${encodeURIComponent(cc)}&ac=${encodeURIComponent(ac)}`;
@@ -583,6 +590,7 @@ async function loadStats() {
   initDifficultyTrend();
   renderStreaks();
   renderTagAnalysis();
+  setDataLoadingVisible(false);
 }
 
 let donutChart = null;
@@ -1416,6 +1424,7 @@ showGreeting();
 prefillProfileFields();
 setAuthActionsVisible(false);
 setAuthStage('auth');
+setDataLoadingVisible(true);
 restoreSession().finally(() => {
   loadStats();
 });
