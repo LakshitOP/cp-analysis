@@ -1,7 +1,9 @@
 You can access my file via this link
 https://cp-analysis.netlify.app/
 
-Started at approx 15 feb
+Started at 15 feb
+v1 complited till 2 march (It can do basic things done)
+ui imporvement v2 is going on.....
 
 ## Netlify deployment
 
