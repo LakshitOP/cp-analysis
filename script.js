@@ -59,6 +59,7 @@ const profileView = document.getElementById('profile-view');
 const authForm = document.getElementById('auth-form');
 const emailInput = document.getElementById('email-input');
 const passwordInput = document.getElementById('password-input');
+const passwordLabel = document.querySelector('label[for="password-input"]');
 const authSubmitBtn = document.getElementById('auth-submit-btn');
 const authMethodSelect = document.getElementById('auth-method');
 const switchAuthModeLink = document.getElementById('switch-auth-mode');
@@ -252,10 +253,15 @@ function updateAuthUI() {
   // Method-specific UI
   if (authMethod === 'magic') {
     if (authSubtitle) authSubtitle.textContent = authMode === 'signup' ? 'Create account via email link.' : 'Sign in with a magic link sent to your email.';
-    if (passwordInput) passwordInput.hidden = true;
+    if (passwordLabel) passwordLabel.hidden = true;
+    if (passwordInput) {
+      passwordInput.hidden = true;
+      passwordInput.value = ''; // clear any existing password
+    }
     if (authSubmitBtn) authSubmitBtn.textContent = authMode === 'signup' ? 'Send sign-up link' : 'Send sign-in link';
   } else {
     if (authSubtitle) authSubtitle.textContent = authMode === 'signup' ? 'Create your account.' : 'Enter your credentials.';
+    if (passwordLabel) passwordLabel.hidden = false;
     if (passwordInput) passwordInput.hidden = false;
     if (authSubmitBtn) authSubmitBtn.textContent = authMode === 'signup' ? 'Sign up' : 'Sign in';
   }
@@ -288,6 +294,8 @@ async function handleAuthSubmit(e) {
   }
 
   authSubmitBtn.disabled = true;
+  if (authForm) authForm.classList.add('loading');
+  
   try {
     if (authMethod === 'magic') {
       // send magic link (no popup)
@@ -318,6 +326,7 @@ async function handleAuthSubmit(e) {
     setAuthStatus(error.message || 'Authentication failed.', true);
   } finally {
     authSubmitBtn.disabled = false;
+    if (authForm) authForm.classList.remove('loading');
   }
 }
 
@@ -345,11 +354,23 @@ if (switchAuthModeLink) {
 updateAuthUI();
 
 // method selector listener (password <-> magic)
+// method selector listener (password <-> magic)
 if (authMethodSelect) {
-  authMethodSelect.addEventListener('change', (e) => {
+  authMethodSelect.addEventListener('change', () => {
     authMethod = authMethodSelect.value === 'magic' ? 'magic' : 'password';
-    if (passwordInput) passwordInput.hidden = authMethod === 'magic';
+
+    // Hide password label and input separately
+    if (passwordLabel) {
+      passwordLabel.hidden = authMethod === 'magic';
+    }
+    if (passwordInput) {
+      passwordInput.hidden = authMethod === 'magic';
+      passwordInput.required = authMethod !== 'magic';
+      if (authMethod === 'magic') passwordInput.value = '';
+    }
+
     if (resendConfirmBtn) resendConfirmBtn.hidden = true;
+
     updateAuthUI();
   });
 }
