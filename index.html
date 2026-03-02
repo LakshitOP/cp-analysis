@@ -71,7 +71,7 @@
             <!-- MODIFY HERE -->
             <div id="profile-view" hidden>
                 <h2 class="modal-title">Set up your handles</h2>
-                <p class="modal-subtitle">You can edit these anytime.</p>
+                <p class="modal-subtitle">Add your Codeforces and CodeChef handles to personalize analytics.</p>
                 <form id="name-form" class="modal-form">
                     <input
                         type="text"
@@ -80,30 +80,27 @@
                         autocomplete="name"
                         required
                     >
-                    <input
-                        type="text"
-                        id="cf-handle-input"
-                        placeholder="Codeforces handle"
-                        autocomplete="off"
-                    >
-                    <input
-                        type="text"
-                        id="lc-handle-input"
-                        placeholder="LeetCode handle"
-                        autocomplete="off"
-                    >
-                    <input
-                        type="text"
-                        id="ac-handle-input"
-                        placeholder="AtCoder handle"
-                        autocomplete="off"
-                    >
-                    <input
-                        type="text"
-                        id="cc-handle-input"
-                        placeholder="CodeChef handle"
-                        autocomplete="off"
-                    >
+                    <div class="handle-field">
+                        <input
+                            type="text"
+                            id="cf-handle-input"
+                            placeholder="Codeforces handle"
+                            autocomplete="off"
+                        >
+                        <span class="handle-tick" id="cf-valid-tick" aria-hidden="true">✔</span>
+                    </div>
+                    <p id="cf-handle-error" class="input-error"></p>
+
+                    <div class="handle-field">
+                        <input
+                            type="text"
+                            id="cc-handle-input"
+                            placeholder="CodeChef handle"
+                            autocomplete="off"
+                        >
+                        <span class="handle-tick" id="cc-valid-tick" aria-hidden="true">✔</span>
+                    </div>
+                    <p id="cc-handle-error" class="input-error"></p>
                     <div class="modal-actions">
                         <button type="submit" class="btn-primary">Save & Continue</button>
                     </div>
@@ -164,6 +161,11 @@
                     <div class="chart-wrap chart-wrap-line">
                         <canvas id="difficulty-trend" aria-label="Difficulty progression over time"></canvas>
                     </div>
+                </div>
+
+                <div class="card glass-card full-width contest-card">
+                    <h3 class="card-title">Upcoming Contests</h3>
+                    <div id="contest-list" class="contest-list"></div>
                 </div>
 
                 <!-- CP Streak Cards -->
