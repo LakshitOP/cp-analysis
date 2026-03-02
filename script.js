@@ -1,12 +1,10 @@
 const STORAGE_NAME = 'cp-tracker-username';
 const STORAGE_THEME = 'cp-tracker-theme';
 const STORAGE_CF_HANDLE = 'cp-tracker-cf-handle';
-const STORAGE_LC_HANDLE = 'cp-tracker-lc-handle';
-const STORAGE_AC_HANDLE = 'cp-tracker-ac-handle';
 const STORAGE_CC_HANDLE = 'cp-tracker-cc-handle';
 const STORAGE_SETUP_DONE = 'cp-tracker-setup-done';
 const DEFAULT_THEME = 'dark';
-let platformCounts = { codeforces: 0, leetcode: 0, codechef: 0, atcoder: 0 };
+let platformCounts = { codeforces: 0, codechef: 0 };
 let difficultyData = [];
 let recentSubmissions = [];
 let tagCounts = {};
@@ -15,9 +13,12 @@ const nameModal = document.getElementById('name-modal');
 const nameForm = document.getElementById('name-form');
 const nameInput = document.getElementById('name-input');
 const cfHandleInput = document.getElementById('cf-handle-input');
-const lcHandleInput = document.getElementById('lc-handle-input');
-const acHandleInput = document.getElementById('ac-handle-input');
 const ccHandleInput = document.getElementById('cc-handle-input');
+const cfValidTick = document.getElementById('cf-valid-tick');
+const ccValidTick = document.getElementById('cc-valid-tick');
+const cfHandleError = document.getElementById('cf-handle-error');
+const ccHandleError = document.getElementById('cc-handle-error');
+const contestList = document.getElementById('contest-list');
 const modalCloseBtn = document.getElementById('modal-close-btn');
 const userNameEl = document.getElementById('user-name');
 
@@ -36,18 +37,7 @@ const supabase = createClient(
     }
   );
 
-(async () => {
-  const { data, error } = await supabase.auth.getSession();
-  if (error) {
-    console.error("Session restore failed:", error);
-  } else if (data.session) {
-    currentUser = data.session.user;
-    setAuthActionsVisible(true);
-    setAuthStage("profile");
-    await syncProfileFromSupabase(currentUser);
-    setModalOpen(false);
-  }
-})();
+
 
 function getUserName() {
   return localStorage.getItem(STORAGE_NAME) || '';
@@ -77,18 +67,14 @@ function getStoredProfile() {
   return {
     name: localStorage.getItem(STORAGE_NAME) || '',
     cf: localStorage.getItem(STORAGE_CF_HANDLE) || '',
-    lc: localStorage.getItem(STORAGE_LC_HANDLE) || '',
-    cc: localStorage.getItem(STORAGE_CC_HANDLE) || '',
-    ac: localStorage.getItem(STORAGE_AC_HANDLE) || ''
+    cc: localStorage.getItem(STORAGE_CC_HANDLE) || ''
   };
 }
 
 function prefillProfileFields(profile = getStoredProfile()) {
   if (nameInput) nameInput.value = profile.name || '';
   if (cfHandleInput) cfHandleInput.value = profile.cf || '';
-  if (lcHandleInput) lcHandleInput.value = profile.lc || '';
   if (ccHandleInput) ccHandleInput.value = profile.cc || '';
-  if (acHandleInput) acHandleInput.value = profile.ac || '';
 }
 
 function setModalOpen(isOpen) {
@@ -100,7 +86,8 @@ function setModalOpen(isOpen) {
 function setAuthStatus(message, isError = false) {
   if (!authStatus) return;
   authStatus.textContent = message || '';
-  authStatus.style.color = isError ? 'var(--danger)' : 'var(--text-secondary)';
+  authStatus.classList.remove('auth-status-error', 'auth-status-ok');
+  if (message) authStatus.classList.add(isError ? 'auth-status-error' : 'auth-status-ok');
 }
 
 // magic-link helper removed; using email/password flows now.
@@ -117,7 +104,7 @@ function setAuthActionsVisible(isLoggedIn) {
   if (logoutBtn) logoutBtn.hidden = !isLoggedIn;
 }
 
-function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle, ghHandle }) {
+function setUserProfile({ name, cfHandle, ccHandle }) {
   const trimmedName = (name || '').trim();
   if (trimmedName) {
     localStorage.setItem(STORAGE_NAME, trimmedName);
@@ -128,21 +115,9 @@ function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle, ghHandle
     const trimmed = cfHandle.trim();
     if (trimmed) localStorage.setItem(STORAGE_CF_HANDLE, trimmed);
   }
-  if (lcHandle !== undefined) {
-    const trimmed = lcHandle.trim();
-    if (trimmed) localStorage.setItem(STORAGE_LC_HANDLE, trimmed);
-  }
-  if (acHandle !== undefined) {
-    const trimmed = acHandle.trim();
-    if (trimmed) localStorage.setItem(STORAGE_AC_HANDLE, trimmed);
-  }
   if (ccHandle !== undefined) {
     const trimmed = ccHandle.trim();
     if (trimmed) localStorage.setItem(STORAGE_CC_HANDLE, trimmed);
-  }
-  if (ghHandle !== undefined) {
-    const trimmed = ghHandle.trim();
-    if (trimmed) localStorage.setItem(STORAGE_GH_HANDLE, trimmed);
   }
 
   localStorage.setItem(STORAGE_SETUP_DONE, 'true');
@@ -173,7 +148,7 @@ async function getCurrentProfileRow(userId) {
   if (!userId) return null;
   const { data, error } = await supabase
     .from("Profiles")
-    .select("user_id, name, codeforces, leetcode, codechef, atcoder, github")
+    .select("user_id, name, codeforces, codechef")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -195,18 +170,14 @@ async function syncProfileFromSupabase(user) {
     setUserProfile({
       name: row.name || '',
       cfHandle: row.codeforces || '',
-      lcHandle: row.leetcode || '',
       ccHandle: row.codechef || '',
-      acHandle: row.atcoder || '',
       // github field removed
     });
 
     prefillProfileFields({
       name: row.name || '',
       cf: row.codeforces || '',
-      lc: row.leetcode || '',
       cc: row.codechef || '',
-      ac: row.atcoder || '',
       });
   } catch (error) {
     console.error("Failed to load profile from Supabase", error);
@@ -229,7 +200,9 @@ async function restoreSession() {
     setAuthActionsVisible(true);
     setAuthStage("profile");
     await syncProfileFromSupabase(currentUser);
-    setModalOpen(false);
+    const profile = getStoredProfile();
+    const needsSetup = !(profile.cf && profile.cc);
+    setModalOpen(needsSetup);
   } else {
     setAuthStage("auth");
     setModalOpen(true);
@@ -294,6 +267,7 @@ async function handleAuthSubmit(e) {
   }
 
   authSubmitBtn.disabled = true;
+  authSubmitBtn.classList.add('auth-submit-loading');
   if (authForm) authForm.classList.add('loading');
   
   try {
@@ -311,8 +285,16 @@ async function handleAuthSubmit(e) {
 
     // password flow
     if (authMode === 'signup') {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
+      if (data?.session?.user) {
+        currentUser = data.session.user;
+        setAuthActionsVisible(true);
+        setAuthStage('profile');
+        setModalOpen(true);
+        setAuthStatus('Account created. Complete your profile handles.');
+        return;
+      }
       setAuthStatus('');
       await showVerificationNotice();
       return;
@@ -326,6 +308,7 @@ async function handleAuthSubmit(e) {
     setAuthStatus(error.message || 'Authentication failed.', true);
   } finally {
     authSubmitBtn.disabled = false;
+    authSubmitBtn.classList.remove('auth-submit-loading');
     if (authForm) authForm.classList.remove('loading');
   }
 }
@@ -407,8 +390,118 @@ if (resendConfirmBtn) {
   });
 }
 
-// attempt to restore session on startup; opens auth modal when no session
-restoreSession();
+
+function setValidationState(platform, state, message = '') {
+  const isCf = platform === 'cf';
+  const tick = isCf ? cfValidTick : ccValidTick;
+  const err = isCf ? cfHandleError : ccHandleError;
+  if (tick) tick.classList.toggle('visible', state === 'valid');
+  if (err) err.textContent = state === 'invalid' ? message : '';
+}
+
+async function validateCodeforcesHandle(handle) {
+  const res = await fetch(`https://codeforces.com/api/user.info?handles=${encodeURIComponent(handle)}`);
+  const data = await res.json();
+  return data.status === 'OK' && Array.isArray(data.result) && data.result.length > 0;
+}
+
+async function validateCodechefHandle(handle) {
+  const res = await fetch(`https://www.codechef.com/users/${encodeURIComponent(handle)}`);
+  if (!res.ok) return false;
+  const html = await res.text();
+  return !html.toLowerCase().includes('user does not exist') && html.toLowerCase().includes('rating');
+}
+
+let handleValidationTimers = {};
+function bindHandleValidation(input, platform) {
+  if (!input) return;
+  input.addEventListener('input', () => {
+    const value = input.value.trim();
+    setValidationState(platform, 'idle');
+    clearTimeout(handleValidationTimers[platform]);
+    if (!value) return;
+    handleValidationTimers[platform] = setTimeout(async () => {
+      try {
+        const exists = platform === 'cf' ? await validateCodeforcesHandle(value) : await validateCodechefHandle(value);
+        setValidationState(platform, exists ? 'valid' : 'invalid', exists ? '' : 'Handle not found');
+      } catch {
+        setValidationState(platform, 'invalid', 'Unable to validate right now');
+      }
+    }, 450);
+  });
+}
+
+bindHandleValidation(cfHandleInput, 'cf');
+bindHandleValidation(ccHandleInput, 'cc');
+
+let contestTimer = null;
+function formatCountdown(ms) {
+  if (ms <= 0) return 'Starting soon';
+  const total = Math.floor(ms / 1000);
+  const d = Math.floor(total / 86400);
+  const h = Math.floor((total % 86400) / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  return `${d}d ${h}h ${m}m`;
+}
+
+function renderContests(contests) {
+  if (!contestList) return;
+  contestList.innerHTML = '';
+  contests.forEach((contest, idx) => {
+    const card = document.createElement('div');
+    card.className = `contest-item ${idx === 0 ? 'next' : ''}`;
+    card.innerHTML = `
+      <div>
+        <p class="contest-name">${escapeHtml(contest.name)}</p>
+        <p class="contest-meta">${escapeHtml(contest.platform)} • ${new Date(contest.start).toLocaleString()}</p>
+      </div>
+      <p class="contest-countdown" data-start="${contest.start}"></p>
+    `;
+    contestList.appendChild(card);
+  });
+  const update = () => {
+    contestList.querySelectorAll('.contest-countdown').forEach((el) => {
+      const start = Number(el.getAttribute('data-start'));
+      el.textContent = formatCountdown(start - Date.now());
+    });
+  };
+  update();
+  clearInterval(contestTimer);
+  contestTimer = setInterval(update, 60000);
+}
+
+async function loadContests() {
+  try {
+    const [cfRes, ccRes] = await Promise.all([
+      fetch('https://codeforces.com/api/contest.list?gym=false'),
+      fetch('https://www.codechef.com/api/list/contests/all')
+    ]);
+    const [cfData, ccData] = await Promise.all([cfRes.json(), ccRes.json()]);
+    const nowSec = Date.now() / 1000;
+    const cfUpcoming = (cfData.result || [])
+      .filter(c => c.phase === 'BEFORE')
+      .slice(0, 4)
+      .map(c => ({ name: c.name, platform: 'Codeforces', start: c.startTimeSeconds * 1000 }));
+    const ccUpcomingRaw = [
+      ...((ccData.future_contests || [])),
+      ...((ccData.present_contests || []))
+    ];
+    const ccUpcoming = ccUpcomingRaw
+      .map(c => ({
+        name: c.contest_name || c.contestCode || 'CodeChef Contest',
+        platform: 'CodeChef',
+        start: new Date(c.contest_start_date_iso || c.contest_start_date).getTime()
+      }))
+      .filter(c => c.start / 1000 >= nowSec)
+      .slice(0, 4);
+
+    const merged = [...cfUpcoming, ...ccUpcoming].sort((a, b) => a.start - b.start).slice(0, 6);
+    renderContests(merged);
+  } catch (error) {
+    if (contestList) contestList.innerHTML = '<p class="modal-subtitle">Unable to load upcoming contests.</p>';
+    console.error('Failed to load contests', error);
+  }
+}
 
 if (nameForm) {
   nameForm.addEventListener("submit", async (e) => {
@@ -422,14 +515,33 @@ if (nameForm) {
 if (window.location.hash.includes("access_token")) {
   history.replaceState({}, document.title, window.location.pathname);
 }
+    const cfValue = cfHandleInput.value.trim();
+    const ccValue = ccHandleInput.value.trim();
+
+    if (!cfValue || !ccValue) {
+      setAuthStatus('Please add both Codeforces and CodeChef handles.', true);
+      return;
+    }
+
+    const [isCfValid, isCcValid] = await Promise.all([
+      validateCodeforcesHandle(cfValue).catch(() => false),
+      validateCodechefHandle(ccValue).catch(() => false),
+    ]);
+
+    setValidationState('cf', isCfValid ? 'valid' : 'invalid', isCfValid ? '' : 'Codeforces handle not found');
+    setValidationState('cc', isCcValid ? 'valid' : 'invalid', isCcValid ? '' : 'CodeChef handle not found');
+
+    if (!isCfValid || !isCcValid) {
+      setAuthStatus('Please fix invalid handles before continuing.', true);
+      return;
+    }
+
     // MODIFY HERE
     const profile = {
       user_id: currentUser.id,
       name: nameInput.value.trim(),
-      codeforces: cfHandleInput.value.trim(),
-      leetcode: lcHandleInput.value.trim(),
-      codechef: ccHandleInput.value.trim(),
-      atcoder: acHandleInput.value.trim(),
+      codeforces: cfValue,
+      codechef: ccValue,
       // github removed
     };
 
@@ -438,12 +550,11 @@ if (window.location.hash.includes("access_token")) {
       setUserProfile({
         name: profile.name,
         cfHandle: profile.codeforces,
-        lcHandle: profile.leetcode,
         ccHandle: profile.codechef,
-        acHandle: profile.atcoder,
       });
-      setAuthStatus('');
+      setAuthStatus('Profile saved.');
       setAuthStage('profile');
+      setModalOpen(false);
     } catch (error) {
       console.error("Failed to save profile to Supabase", error);
       setAuthStatus(error.message || 'Failed to save profile.', true);
@@ -481,7 +592,8 @@ supabase.auth.onAuthStateChange((event, session) => {
       setAuthActionsVisible(true);
       setAuthStage('profile');
       await syncProfileFromSupabase(currentUser);
-      setModalOpen(false);
+      const profile = getStoredProfile();
+      setModalOpen(!(profile.cf && profile.cc));
       setAuthStatus('');
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
@@ -540,8 +652,8 @@ function setDataLoadingVisible(isVisible) {
 async function loadStats() {
   setDataLoadingVisible(true);
   try {
-    const { cf, lc, cc, ac } = getStoredProfile();
-    const statsUrl = `/.netlify/functions/stats?cf=${encodeURIComponent(cf)}&lc=${encodeURIComponent(lc)}&cc=${encodeURIComponent(cc)}&ac=${encodeURIComponent(ac)}`;
+    const { cf, cc } = getStoredProfile();
+    const statsUrl = `/.netlify/functions/stats?cf=${encodeURIComponent(cf)}&cc=${encodeURIComponent(cc)}`;
     let res = await fetch(statsUrl);
     if (!res.ok) {
       res = await fetch('data.json');
@@ -550,22 +662,14 @@ async function loadStats() {
     if (data.platforms) {
       platformCounts = {
         codeforces: data.platforms.codeforces || 0,
-        leetcode: data.platforms.leetcode || 0,
-        codechef: data.platforms.codechef || 0,
-        atcoder: data.platforms.atcoder || 0
+        codechef: data.platforms.codechef || 0
       };
     }
     if (data.difficulty_chart) {
-      // Filter to only Codeforces and LeetCode difficulty data
-      difficultyData = data.difficulty_chart.filter(d => 
-        d.label.startsWith('CF ') || d.label.startsWith('LC ')
-      );
+      difficultyData = data.difficulty_chart.filter(d => d.label.startsWith('CF ') || d.label.startsWith('CC '));
     }
     if (data.recent_submissions) {
-      // Filter to only Codeforces and LeetCode submissions
-      recentSubmissions = data.recent_submissions.filter(s => 
-        s.platform === 'codeforces' || s.platform === 'leetcode'
-      );
+      recentSubmissions = data.recent_submissions.filter(s => s.platform === 'codeforces' || s.platform === 'codechef');
       // Clear caches when data changes
       filteredSubmissionsCache = null;
       filteredSubmissionsCacheKey = null;
@@ -597,8 +701,8 @@ let donutChart = null;
 let donutChartTheme = null;
 let donutChartData = null;
 
-const PLATFORM_LABELS = ['Codeforces', 'LeetCode', 'CodeChef', 'AtCoder'];
-const PLATFORM_COLORS = ['#445f9d', '#ffa116', '#5c4033', '#2d2d2d'];
+const PLATFORM_LABELS = ['Codeforces', 'CodeChef'];
+const PLATFORM_COLORS = ['#445f9d', '#5c4033'];
 
 function initPlatformDonut() {
   const ctx = document.getElementById('platform-donut');
@@ -607,11 +711,9 @@ function initPlatformDonut() {
   const textColor = isDark ? '#e6edf3' : '#1f2328';
   const currentData = [
     platformCounts.codeforces,
-    platformCounts.leetcode,
-    platformCounts.codechef,
-    platformCounts.atcoder
+    platformCounts.codechef
   ];
-  const activeIndices = [0, 1, 2, 3].filter(i => currentData[i] > 0);
+  const activeIndices = [0, 1].filter(i => currentData[i] > 0);
   const labels = activeIndices.length ? activeIndices.map(i => PLATFORM_LABELS[i]) : PLATFORM_LABELS;
   const data = activeIndices.length ? activeIndices.map(i => currentData[i]) : currentData;
   const bgColors = activeIndices.length ? activeIndices.map(i => PLATFORM_COLORS[i]) : PLATFORM_COLORS;
@@ -659,10 +761,7 @@ function initDifficultyBars() {
   const textColor = isDark ? '#8b949e' : '#656d76';
   const gridColor = isDark ? 'rgba(48, 54, 61, 0.6)' : 'rgba(31, 35, 40, 0.15)';
   
-  // Filter difficulty data to only Codeforces and LeetCode
-  const filteredData = difficultyData.filter(d => 
-    d.label.startsWith('CF ') || d.label.startsWith('LC ')
-  );
+  const filteredData = difficultyData.filter(d => d.label.startsWith('CF ') || d.label.startsWith('CC '));
   
   const currentData = filteredData.map(d => d.count);
   const dataChanged = !barChartData || 
@@ -705,16 +804,10 @@ function getDifficultyScore(submission) {
     if (isNaN(rating)) return null;
     // Map Codeforces rating to score (800-3500 range)
     return rating;
-  } else if (submission.platform === 'leetcode') {
-    // Map LeetCode difficulty to score: Easy=1, Medium=2, Hard=3
-    const diff = submission.difficulty.toLowerCase();
-    if (diff.includes('easy')) return 1;
-    if (diff.includes('medium')) return 2;
-    if (diff.includes('hard')) return 3;
-    // Try to parse numeric difficulty if available
-    const num = parseInt(submission.difficulty);
-    if (!isNaN(num)) return num;
-    return null;
+  } else if (submission.platform === 'codechef') {
+    const stars = parseInt(submission.difficulty);
+    if (isNaN(stars)) return null;
+    return stars * 200;
   }
   return null;
 }
@@ -954,10 +1047,7 @@ function renderSubmissions() {
   const tbody = document.getElementById('submissions-body');
   if (!tbody) return;
   
-  // Filter to only Codeforces and LeetCode
-  const filtered = recentSubmissions.filter(row => 
-    row.platform === 'codeforces' || row.platform === 'leetcode'
-  );
+  const filtered = recentSubmissions.filter(row => row.platform === 'codeforces' || row.platform === 'codechef');
   
   // Check if data changed
   const currentKey = JSON.stringify(filtered.map(s => ({ 
@@ -975,7 +1065,7 @@ function renderSubmissions() {
   if (filtered.length === 0) {
     tbody.innerHTML = recentSubmissions.length === 0 
       ? 'Run the Python script to fetch recent submissions!'
-      : 'No submissions from Codeforces or LeetCode found.';
+: 'No submissions from Codeforces or CodeChef found.';
     return;
   }
   
@@ -1025,9 +1115,7 @@ function getFilteredSubmissions() {
     return filteredSubmissionsCache;
   }
   
-  filteredSubmissionsCache = recentSubmissions.filter(s => 
-    s.platform === 'codeforces' || s.platform === 'leetcode'
-  );
+  filteredSubmissionsCache = recentSubmissions.filter(s => s.platform === 'codeforces' || s.platform === 'codechef');
   filteredSubmissionsCacheKey = cacheKey;
   return filteredSubmissionsCache;
 }
@@ -1073,7 +1161,7 @@ function calculateHeatmapData() {
     return heatmapDataCache;
   }
 
-  // Create a map of date -> { total, codeforces, leetcode } (using local timezone consistently)
+  // Create a map of date -> { total, codeforces, codechef } (using local timezone consistently)
   const activityMap = new Map();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -1083,12 +1171,12 @@ function calculateHeatmapData() {
     const date = parseToLocalDate(sub.solvedAt);
     if (date) {
       const dateStr = formatLocalDate(date);
-      const existing = activityMap.get(dateStr) || { total: 0, codeforces: 0, leetcode: 0 };
+      const existing = activityMap.get(dateStr) || { total: 0, codeforces: 0, codechef: 0 };
       existing.total += 1;
       if (sub.platform === 'codeforces') {
         existing.codeforces += 1;
-      } else if (sub.platform === 'leetcode') {
-        existing.leetcode += 1;
+      } else if (sub.platform === 'codechef') {
+        existing.codechef += 1;
       }
       activityMap.set(dateStr, existing);
     }
@@ -1104,7 +1192,7 @@ function calculateHeatmapData() {
     const currentDate = new Date(startDate);
     currentDate.setDate(startDate.getDate() + i);
     const dateStr = formatLocalDate(currentDate);
-    const activity = activityMap.get(dateStr) || { total: 0, codeforces: 0, leetcode: 0 };
+    const activity = activityMap.get(dateStr) || { total: 0, codeforces: 0, codechef: 0 };
     const count = activity.total;
     
     // Map count to level (0-4)
@@ -1121,7 +1209,7 @@ function calculateHeatmapData() {
       count,
       level,
       codeforces: activity.codeforces,
-      leetcode: activity.leetcode
+      codechef: activity.codechef
     });
   }
 
@@ -1283,8 +1371,8 @@ function renderHeatmap() {
         if (day.codeforces > 0) {
           parts.push(`${day.codeforces} Codeforces`);
         }
-        if (day.leetcode > 0) {
-          parts.push(`${day.leetcode} LeetCode`);
+        if (day.codechef > 0) {
+          parts.push(`${day.codechef} CodeChef`);
         }
         if (parts.length > 0) {
           tooltipText += `\n${parts.join(' • ')}`;
@@ -1427,4 +1515,5 @@ setAuthStage('auth');
 setDataLoadingVisible(true);
 restoreSession().finally(() => {
   loadStats();
+loadContests();
 });
