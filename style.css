@@ -1004,7 +1004,7 @@ html.theme-transitioning *::after {
 }
 
 .platform-codeforces { background: rgba(68, 95, 157, 0.2); color: #445f9d; }
-.platform-codechef { background: rgba(92, 64, 51, 0.2); color: #5c4033; }
+.platform-leetcode { background: rgba(255, 161, 22, 0.2); color: #ffa116; }
 
 .submissions-table .difficulty {
     font-size: 0.85rem;
@@ -1178,101 +1178,4 @@ html.theme-transitioning *::after {
         padding: 0.5rem 0.75rem;
         font-size: 0.85rem;
     }
-}
-
-/* Setup profile validation */
-.handle-field {
-    position: relative;
-}
-
-.handle-field input {
-    padding-right: 2.2rem;
-}
-
-.handle-tick {
-    position: absolute;
-    right: 0.8rem;
-    top: 50%;
-    transform: translateY(-50%) scale(0.9);
-    color: #16a34a;
-    font-weight: 700;
-    opacity: 0;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.handle-tick.visible {
-    opacity: 1;
-    transform: translateY(-50%) scale(1);
-}
-
-.input-error {
-    min-height: 1rem;
-    margin: -0.6rem 0 0;
-    font-size: 0.78rem;
-    color: var(--danger);
-}
-
-.auth-status-error {
-    color: var(--danger);
-}
-
-.auth-status-ok {
-    color: var(--success);
-}
-
-.auth-submit-loading::after {
-    content: ' ...';
-    animation: fadePulse 1s ease-in-out infinite;
-}
-
-@keyframes fadePulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
-}
-
-/* Contest section */
-.contest-card {
-    margin-top: 0.25rem;
-}
-
-.contest-list {
-    display: grid;
-    gap: 0.7rem;
-}
-
-.contest-item {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: center;
-    padding: 0.8rem 1rem;
-    border: 1px solid var(--glass-border);
-    border-radius: 10px;
-    background: var(--bg-secondary);
-}
-
-.contest-item.next {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px var(--accent-dim);
-}
-
-.contest-name {
-    margin: 0;
-    font-weight: 600;
-}
-
-.contest-meta,
-.contest-countdown {
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-/* centered distraction-free layout */
-.app {
-    max-width: 1080px;
-}
-
-.main {
-    width: 100%;
 }

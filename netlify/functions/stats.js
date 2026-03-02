@@ -9,42 +9,30 @@ const json = (statusCode, body) => ({
 });
 
 const CF_DIFF_TEMPLATE = {
-  'CF 800-999': 0,
+  'CF <1000': 0,
   'CF 1000-1199': 0,
   'CF 1200-1399': 0,
   'CF 1400+': 0,
 };
 
-const CC_DIFF_TEMPLATE = {
-  'CC 1★-2★': 0,
-  'CC 3★-4★': 0,
-  'CC 5★-7★': 0,
+const LC_DIFF_TEMPLATE = {
+  'LC Easy': 0,
+  'LC Medium': 0,
+  'LC Hard': 0,
 };
 
 function classifyCf(rating) {
   if (typeof rating !== 'number') return null;
-  if (rating < 1000) return 'CF 800-999';
+  if (rating < 1000) return 'CF <1000';
   if (rating < 1200) return 'CF 1000-1199';
   if (rating < 1400) return 'CF 1200-1399';
   return 'CF 1400+';
 }
 
-function classifyCcStars(stars) {
-  if (typeof stars !== 'number' || Number.isNaN(stars)) return null;
-  if (stars <= 2) return 'CC 1★-2★';
-  if (stars <= 4) return 'CC 3★-4★';
-  return 'CC 5★-7★';
-}
-
-function toDifficultyClass(value, platform) {
-  if (platform === 'codechef') {
-    if (value >= 5) return 'hard';
-    if (value >= 3) return 'medium';
-    return 'easy';
-  }
-  if (typeof value !== 'number') return 'easy';
-  if (value >= 1400) return 'hard';
-  if (value >= 1000) return 'medium';
+function toDifficultyClass(rating) {
+  if (typeof rating !== 'number') return 'easy';
+  if (rating >= 1400) return 'hard';
+  if (rating >= 1000) return 'medium';
   return 'easy';
 }
 
@@ -82,14 +70,14 @@ async function getCodeforcesData(handle) {
       const tags = Array.isArray(submission.problem.tags) ? submission.problem.tags : [];
       for (const tag of tags) tagCounts[tag] = (tagCounts[tag] || 0) + 1;
 
-      if (recentSubmissions.length < 8) {
+      if (recentSubmissions.length < 10) {
         recentSubmissions.push({
           name: submission.problem.name,
           url: contestId && index ? `https://codeforces.com/contest/${contestId}/problem/${index}` : '',
           platform: 'codeforces',
           platformLabel: 'CF',
           difficulty: typeof rating === 'number' ? String(rating) : 'N/A',
-          difficultyClass: toDifficultyClass(rating, 'codeforces'),
+          difficultyClass: toDifficultyClass(rating),
           solvedAt: submission.creationTimeSeconds
             ? new Date(submission.creationTimeSeconds * 1000).toISOString()
             : '',
@@ -104,29 +92,69 @@ async function getCodeforcesData(handle) {
   }
 }
 
-async function getCodechefData(handle) {
-  const diff = { ...CC_DIFF_TEMPLATE };
-  const recentSubmissions = [];
-  if (!handle) return { count: 0, diff, recentSubmissions };
+async function getLeetcodeData(handle) {
+  const diff = { ...LC_DIFF_TEMPLATE };
+  if (!handle) return { count: 0, diff };
 
   try {
-    const userRes = await fetch(`https://www.codechef.com/users/${encodeURIComponent(handle)}`);
-    const userHtml = await userRes.text();
+    const res = await fetch('https://leetcode.com/graphql/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: 'query getUserProfile($username: String!) { matchedUser(username: $username) { submitStats: submitStatsGlobal { acSubmissionNum { difficulty count } } } }',
+        variables: { username: handle },
+      }),
+    });
 
-    const solvedMatch = userHtml.match(/Fully Solved\s*\(?\s*(\d+)\s*\)?/i) || userHtml.match(/Problems Solved\s*\(?\s*(\d+)\s*\)?/i);
-    const count = solvedMatch ? Number(solvedMatch[1]) : 0;
+    const payload = await res.json();
+    const stats = payload?.data?.matchedUser?.submitStats?.acSubmissionNum;
+    if (!Array.isArray(stats)) return { count: 0, diff };
 
-    const starsMatch = userHtml.match(/(\d)★/) || userHtml.match(/rating\s*:\s*"?([1-7])"?/i);
-    const stars = starsMatch ? Number(starsMatch[1]) : null;
-    const starBucket = classifyCcStars(stars);
-    if (starBucket) {
-      // lightweight approximation: distribute solved problems by profile star level.
-      diff[starBucket] = Math.max(1, count);
+    let count = 0;
+    for (const item of stats) {
+      if (item.difficulty === 'All') count = item.count || 0;
+      if (item.difficulty === 'Easy') diff['LC Easy'] = item.count || 0;
+      if (item.difficulty === 'Medium') diff['LC Medium'] = item.count || 0;
+      if (item.difficulty === 'Hard') diff['LC Hard'] = item.count || 0;
+    }
+    return { count, diff };
+  } catch {
+    return { count: 0, diff };
+  }
+}
+
+async function getCodechefCount(handle) {
+  if (!handle) return 0;
+  try {
+    const res = await fetch(`https://www.codechef.com/users/${encodeURIComponent(handle)}`);
+    const html = await res.text();
+    const match = html.match(/Fully Solved.*?(\d+)/i);
+    return match ? Number(match[1]) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function getAtcoderCount(handle) {
+  if (!handle) return 0;
+  try {
+    const rankRes = await fetch(`https://kenkoooo.com/atcoder/atcoder-api/v3/user/ac_rank?user=${encodeURIComponent(handle)}`);
+    if (rankRes.ok) {
+      const rankPayload = await rankRes.json();
+      if (typeof rankPayload.count === 'number') return rankPayload.count;
     }
 
-    return { count, diff, recentSubmissions };
+    const submissionsRes = await fetch(`https://kenkoooo.com/atcoder/atcoder-api/v3/user/submissions?user=${encodeURIComponent(handle)}&from_second=0`);
+    if (!submissionsRes.ok) return 0;
+    const submissions = await submissionsRes.json();
+    const solved = new Set(
+      (Array.isArray(submissions) ? submissions : [])
+        .filter((item) => item.result === 'AC' && item.problem_id)
+        .map((item) => item.problem_id)
+    );
+    return solved.size;
   } catch {
-    return { count: 0, diff, recentSubmissions };
+    return 0;
   }
 }
 
@@ -135,16 +163,22 @@ exports.handler = async (event) => {
 
   const params = event.queryStringParameters || {};
   const cf = (params.cf || '').trim();
+  const lc = (params.lc || '').trim();
   const cc = (params.cc || '').trim();
+  const ac = (params.ac || '').trim();
 
-  const [cfData, ccData] = await Promise.all([
+  const [cfData, lcData, ccCount, acCount] = await Promise.all([
     getCodeforcesData(cf),
-    getCodechefData(cc),
+    getLeetcodeData(lc),
+    getCodechefCount(cc),
+    getAtcoderCount(ac),
   ]);
 
   const platforms = {
     codeforces: cfData.count,
-    codechef: ccData.count,
+    leetcode: lcData.count,
+    codechef: ccCount,
+    atcoder: acCount,
   };
 
   return json(200, {
@@ -153,13 +187,13 @@ exports.handler = async (event) => {
     target: 1500,
     platforms,
     difficulty_chart: [
-      { label: 'CF 800-999', count: cfData.diff['CF 800-999'], color: '#4caf50' },
+      { label: 'CF <1000', count: cfData.diff['CF <1000'], color: '#4caf50' },
       { label: 'CF 1000-1199', count: cfData.diff['CF 1000-1199'], color: '#8bc34a' },
       { label: 'CF 1200-1399', count: cfData.diff['CF 1200-1399'], color: '#ffc107' },
       { label: 'CF 1400+', count: cfData.diff['CF 1400+'], color: '#f44336' },
-      { label: 'CC 1★-2★', count: ccData.diff['CC 1★-2★'], color: '#8ecae6' },
-      { label: 'CC 3★-4★', count: ccData.diff['CC 3★-4★'], color: '#219ebc' },
-      { label: 'CC 5★-7★', count: ccData.diff['CC 5★-7★'], color: '#023047' },
+      { label: 'LC Easy', count: lcData.diff['LC Easy'], color: '#4caf50' },
+      { label: 'LC Medium', count: lcData.diff['LC Medium'], color: '#ff9800' },
+      { label: 'LC Hard', count: lcData.diff['LC Hard'], color: '#f44336' },
     ],
     recent_submissions: cfData.recentSubmissions,
     tag_counts: cfData.tagCounts,
