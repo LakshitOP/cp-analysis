@@ -1,5 +1,5 @@
 You can access my file via this link
-https://cp-analysis.netlify.app/
+https://cp-analysiss.netlify.app/
 
 Started at 15 feb
 v1 complited till 2 march (It can do basic things done)
