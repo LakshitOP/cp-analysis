@@ -14,62 +14,7 @@
         <div class="modal glass-card">
             <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Close handle setup modal">x</button>
 
-            <!-- ADD HERE -->
-            <div id="auth-view">
-                <h2 class="modal-title" id="auth-title">Sign in</h2>
-                <p class="modal-subtitle" id="auth-subtitle">Choose sign-in method and enter your credentials.</p>
-
-                <form id="auth-form" class="modal-form" autocomplete="off">
-                    <div class="form-row">
-                        <label for="auth-method" class="modal-label">Method</label>
-                        <select id="auth-method" class="modal-select">
-                            <option value="password">Password</option>
-                            <option value="magic">Email link</option>
-                        </select>
-                    </div>
-
-                    <div class="form-row">
-                        <label for="email-input" class="modal-label">Email address</label>
-                        <input
-                            type="email"
-                            id="email-input"
-                            class="modal-input"
-                            placeholder="you@example.com"
-                            autocomplete="email"
-                            required
-                        >
-                    </div>
-
-                    <div class="form-row">
-                        <label for="password-input" class="modal-label">Password</label>
-                        <input
-                            type="password"
-                            id="password-input"
-                            class="modal-input"
-                            placeholder="Password"
-                            autocomplete="current-password"
-                            required
-                        >
-                    </div>
-
-                    <button type="submit" id="auth-submit-btn" class="btn-primary">Sign in</button>
-                </form>
-
-                <div class="auth-loader">
-                    <div class="loader-5"></div>
-                    <p class="modal-subtitle">Authenticating...</p>
-                </div>
-
-                <p class="modal-niche">
-                    <a href="#" id="switch-auth-mode">Don't have an account? Sign up</a>
-                </p>
-
-                <button type="button" id="resend-confirm-btn" class="btn-secondary" hidden>Resend confirmation email</button>
-                <p id="auth-status" class="modal-subtitle"></p>
-            </div>
-
-            <!-- MODIFY HERE -->
-            <div id="profile-view" hidden>
+            <div id="profile-view">
                 <h2 class="modal-title">Set up your handles</h2>
                 <p class="modal-subtitle">You can edit these anytime.</p>
                 <form id="name-form" class="modal-form">
@@ -128,7 +73,6 @@
             </div>
             <div class="header-right">
                 <button type="button" class="btn-edit-handles" id="edit-handles-btn" aria-label="Edit handles and name">Edit handles</button>
-                <!-- ADD HERE -->
                 <button type="button" class="btn-edit-handles" id="logout-btn" aria-label="Logout" hidden>Logout</button>
                 <span class="theme-label" id="theme-label">Dark</span>
                 <label class="toggle" aria-label="Toggle dark/light mode">

@@ -21,57 +21,13 @@ const ccHandleInput = document.getElementById('cc-handle-input');
 const modalCloseBtn = document.getElementById('modal-close-btn');
 const userNameEl = document.getElementById('user-name');
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js";
-
-const supabase = createClient(
-  "https://ssqujoxmtkbnjwsdfmpb.supabase.co",
-  "sb_publishable_Lar1r6YYzsuV07RLXJmJwA_gdRghveL",
-  {
-      auth: {
-        detectSessionInUrl: true,
-        persistSession: true,
-        autoRefreshToken: true,
-        flowType: "pkce",
-      },
-    }
-  );
-
-(async () => {
-  const { data, error } = await supabase.auth.getSession();
-  if (error) {
-    console.error("Session restore failed:", error);
-  } else if (data.session) {
-    currentUser = data.session.user;
-    setAuthActionsVisible(true);
-    setAuthStage("profile");
-    await syncProfileFromSupabase(currentUser);
-    setModalOpen(false);
-  }
-})();
-
 function getUserName() {
   return localStorage.getItem(STORAGE_NAME) || '';
 }
 
-// ADD HERE
-const authView = document.getElementById('auth-view');
 const profileView = document.getElementById('profile-view');
-const authForm = document.getElementById('auth-form');
-const emailInput = document.getElementById('email-input');
-const passwordInput = document.getElementById('password-input');
-const passwordLabel = document.querySelector('label[for="password-input"]');
-const authSubmitBtn = document.getElementById('auth-submit-btn');
-const authMethodSelect = document.getElementById('auth-method');
-const switchAuthModeLink = document.getElementById('switch-auth-mode');
-const resendConfirmBtn = document.getElementById('resend-confirm-btn');
-const authTitle = document.getElementById('auth-title');
-const authSubtitle = document.getElementById('auth-subtitle');
-const authStatus = document.getElementById('auth-status');
 const editHandlesBtn = document.getElementById('edit-handles-btn');
 const logoutBtn = document.getElementById('logout-btn');
-
-let currentUser = null;
-let authMethod = 'password'; // 'password' or 'magic'
 
 function getStoredProfile() {
   return {
@@ -96,408 +52,95 @@ function setModalOpen(isOpen) {
   nameModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
 }
 
-// ADD HERE
-function setAuthStatus(message, isError = false) {
-  if (!authStatus) return;
-  authStatus.textContent = message || '';
-  authStatus.style.color = isError ? 'var(--danger)' : 'var(--text-secondary)';
+function setProfileStage() {
+  if (profileView) profileView.hidden = false;
+  if (modalCloseBtn) modalCloseBtn.hidden = false;
 }
 
-// magic-link helper removed; using email/password flows now.
-// email+password sign-up / sign-in does not require a popup or redirect.
-
-function setAuthStage(stage) {
-  if (authView) authView.hidden = stage !== 'auth';
-  if (profileView) profileView.hidden = stage !== 'profile';
-  if (modalCloseBtn) modalCloseBtn.hidden = stage === 'auth';
+function setHeaderActionsVisible() {
+  if (editHandlesBtn) editHandlesBtn.hidden = false;
+  if (logoutBtn) logoutBtn.hidden = true;
 }
 
-function setAuthActionsVisible(isLoggedIn) {
-  if (editHandlesBtn) editHandlesBtn.hidden = !isLoggedIn;
-  if (logoutBtn) logoutBtn.hidden = !isLoggedIn;
-}
-
-function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle, ghHandle }) {
+function setUserProfile({ name, cfHandle, lcHandle, acHandle, ccHandle }) {
   const trimmedName = (name || '').trim();
   if (trimmedName) {
     localStorage.setItem(STORAGE_NAME, trimmedName);
     if (userNameEl) userNameEl.textContent = trimmedName;
+  } else {
+    localStorage.removeItem(STORAGE_NAME);
+    if (userNameEl) userNameEl.textContent = 'Guest';
   }
 
   if (cfHandle !== undefined) {
     const trimmed = cfHandle.trim();
     if (trimmed) localStorage.setItem(STORAGE_CF_HANDLE, trimmed);
+    else localStorage.removeItem(STORAGE_CF_HANDLE);
   }
   if (lcHandle !== undefined) {
     const trimmed = lcHandle.trim();
     if (trimmed) localStorage.setItem(STORAGE_LC_HANDLE, trimmed);
+    else localStorage.removeItem(STORAGE_LC_HANDLE);
   }
   if (acHandle !== undefined) {
     const trimmed = acHandle.trim();
     if (trimmed) localStorage.setItem(STORAGE_AC_HANDLE, trimmed);
+    else localStorage.removeItem(STORAGE_AC_HANDLE);
   }
   if (ccHandle !== undefined) {
     const trimmed = ccHandle.trim();
     if (trimmed) localStorage.setItem(STORAGE_CC_HANDLE, trimmed);
-  }
-  if (ghHandle !== undefined) {
-    const trimmed = ghHandle.trim();
-    if (trimmed) localStorage.setItem(STORAGE_GH_HANDLE, trimmed);
+    else localStorage.removeItem(STORAGE_CC_HANDLE);
   }
 
   localStorage.setItem(STORAGE_SETUP_DONE, 'true');
   showGreeting();
-  // removed github streak call
   setModalOpen(false);
 }
 
 function showGreeting() {
   const { name } = getStoredProfile();
-  if (userNameEl) userNameEl.textContent = currentUser ? (name || 'Guest') : 'Guest';
+  if (userNameEl) userNameEl.textContent = name || 'Guest';
 }
 
 function openHandlesModal() {
-  if (!currentUser) return;
-  setAuthStage('profile');
+  setProfileStage();
   prefillProfileFields();
   setModalOpen(true);
 }
 
 function closeHandlesModal() {
-  if (!currentUser) return;
   setModalOpen(false);
 }
 
-// MODIFY HERE
-async function getCurrentProfileRow(userId) {
-  if (!userId) return null;
-  const { data, error } = await supabase
-    .from("Profiles")
-    .select("user_id, name, codeforces, leetcode, codechef, atcoder, github")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data;
-}
-
-async function upsertProfile(profile) {
-  const { error } = await supabase.from("Profiles").upsert(profile);
-  if (error) throw error;
-}
-
-async function syncProfileFromSupabase(user) {
-  if (!user?.id) return;
-  try {
-    const row = await getCurrentProfileRow(user.id);
-    if (!row) return;
-
-    setUserProfile({
-      name: row.name || '',
-      cfHandle: row.codeforces || '',
-      lcHandle: row.leetcode || '',
-      ccHandle: row.codechef || '',
-      acHandle: row.atcoder || '',
-      // github field removed
-    });
-
-    prefillProfileFields({
-      name: row.name || '',
-      cf: row.codeforces || '',
-      lc: row.leetcode || '',
-      cc: row.codechef || '',
-      ac: row.atcoder || '',
-      });
-  } catch (error) {
-    console.error("Failed to load profile from Supabase", error);
-  }
-}
-
-// ADD HERE
-async function restoreSession() {
-  const { data, error } = await supabase.auth.getSession();
-
-  if (error) {
-    console.error("Session restore failed:", error);
-    setAuthStage("auth");
-    setModalOpen(true);
-    return;
-  }
-
-  if (data?.session?.user) {
-    currentUser = data.session.user;
-    setAuthActionsVisible(true);
-    setAuthStage("profile");
-    await syncProfileFromSupabase(currentUser);
-    setModalOpen(false);
-  } else {
-    setAuthStage("auth");
-    setModalOpen(true);
-  }
-}
-
-// authentication mode can be 'signin' or 'signup'
-let authMode = 'signin';
-
-function updateAuthUI() {
-  if (!authTitle || !authSubtitle || !authSubmitBtn || !switchAuthModeLink) return;
-  // Title and mode text
-  if (authMode === 'signin') {
-    authTitle.textContent = 'Sign in';
-    switchAuthModeLink.textContent = "Don't have an account? Sign up";
-  } else {
-    authTitle.textContent = 'Sign up';
-    switchAuthModeLink.textContent = 'Already have an account? Sign in';
-  }
-
-  // Method-specific UI
-  if (authMethod === 'magic') {
-    if (authSubtitle) authSubtitle.textContent = authMode === 'signup' ? 'Create account via email link.' : 'Sign in with a magic link sent to your email.';
-    if (passwordLabel) passwordLabel.hidden = true;
-    if (passwordInput) {
-      passwordInput.hidden = true;
-      passwordInput.value = ''; // clear any existing password
-    }
-    if (authSubmitBtn) authSubmitBtn.textContent = authMode === 'signup' ? 'Send sign-up link' : 'Send sign-in link';
-  } else {
-    if (authSubtitle) authSubtitle.textContent = authMode === 'signup' ? 'Create your account.' : 'Enter your credentials.';
-    if (passwordLabel) passwordLabel.hidden = false;
-    if (passwordInput) passwordInput.hidden = false;
-    if (authSubmitBtn) authSubmitBtn.textContent = authMode === 'signup' ? 'Sign up' : 'Sign in';
-  }
-}
-
-async function showVerificationNotice() {
-  if (!authTitle || !authSubtitle || !authForm || !switchAuthModeLink) return;
-  authTitle.textContent = 'Verify your email';
-  authSubtitle.textContent = 'A confirmation email has been sent. Please check your inbox.';
-  // disable all input elements and hide mode toggle while waiting for verification
-  Array.from(authForm.elements).forEach(el => el.disabled = true);
-  switchAuthModeLink.hidden = true;
-  if (resendConfirmBtn) {
-    resendConfirmBtn.hidden = false;
-    resendConfirmBtn.disabled = false;
-  }
-}
-
-async function handleAuthSubmit(e) {
-  e.preventDefault();
-  const email = (emailInput?.value || '').trim();
-  const password = (passwordInput?.value || '');
-  if (!email) {
-    setAuthStatus('Please enter your email.', true);
-    return;
-  }
-  if (authMethod === 'password' && !password) {
-    setAuthStatus('Please enter your password.', true);
-    return;
-  }
-
-  authSubmitBtn.disabled = true;
-  if (authForm) authForm.classList.add('loading');
-  
-  try {
-    if (authMethod === 'magic') {
-      // send magic link (no popup)
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: `${window.location.origin}${window.location.pathname}` }
-      });
-      if (error) throw error;
-      setAuthStatus('');
-      await showVerificationNotice();
-      return;
-    }
-
-    // password flow
-    if (authMode === 'signup') {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-      setAuthStatus('');
-      await showVerificationNotice();
-      return;
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      setAuthStatus('');
-    }
-  } catch (error) {
-    console.error('Authentication error', error);
-    setAuthStatus(error.message || 'Authentication failed.', true);
-  } finally {
-    authSubmitBtn.disabled = false;
-    if (authForm) authForm.classList.remove('loading');
-  }
-}
-
-if (authForm) {
-  authForm.addEventListener('submit', handleAuthSubmit);
-}
-
-if (switchAuthModeLink) {
-  switchAuthModeLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    authMode = authMode === 'signin' ? 'signup' : 'signin';
-    updateAuthUI();
-    setAuthStatus('');
-    // restore inputs in case they were disabled by verification notice
-    if (authForm) {
-      Array.from(authForm.elements).forEach(el => el.disabled = false);
-    }
-    switchAuthModeLink.hidden = false;
-    if (resendConfirmBtn) {
-      resendConfirmBtn.hidden = true;
-    }
-  });
-}
-
-updateAuthUI();
-
-// method selector listener (password <-> magic)
-// method selector listener (password <-> magic)
-if (authMethodSelect) {
-  authMethodSelect.addEventListener('change', () => {
-    authMethod = authMethodSelect.value === 'magic' ? 'magic' : 'password';
-
-    // Hide password label and input separately
-    if (passwordLabel) {
-      passwordLabel.hidden = authMethod === 'magic';
-    }
-    if (passwordInput) {
-      passwordInput.hidden = authMethod === 'magic';
-      passwordInput.required = authMethod !== 'magic';
-      if (authMethod === 'magic') passwordInput.value = '';
-    }
-
-    if (resendConfirmBtn) resendConfirmBtn.hidden = true;
-
-    updateAuthUI();
-  });
-}
-
-// setup resend confirmation handler
-if (resendConfirmBtn) {
-  resendConfirmBtn.addEventListener('click', async () => {
-    const email = (emailInput?.value || '').trim();
-    if (!email) {
-      setAuthStatus('Enter your email to resend confirmation.', true);
-      return;
-    }
-    resendConfirmBtn.disabled = true;
-    try {
-      if (authMethod === 'magic') {
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: `${window.location.origin}${window.location.pathname}` }
-        });
-        if (error) throw error;
-        setAuthStatus('Magic link resent. Check your inbox.');
-      } else {
-        // try to resend confirmation for password signups (may depend on Supabase settings)
-        const { error } = await supabase.auth.resend ? await supabase.auth.resend({ email }) : { error: null };
-        if (error) throw error;
-        setAuthStatus('Confirmation email resent.');
-      }
-    } catch (err) {
-      console.error('Resend error', err);
-      setAuthStatus(err.message || 'Unable to resend confirmation.', true);
-    } finally {
-      resendConfirmBtn.disabled = false;
-    }
-  });
-}
-
-// attempt to restore session on startup; opens auth modal when no session
-restoreSession();
-
 if (nameForm) {
-  nameForm.addEventListener("submit", async (e) => {
+  nameForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!currentUser?.id) {
-      setAuthStage('auth');
-      setAuthStatus('Sign in first to save profile.', true);
-      setModalOpen(true);
-      return;
-    }
-if (window.location.hash.includes("access_token")) {
-  history.replaceState({}, document.title, window.location.pathname);
-}
-    // MODIFY HERE
-    const profile = {
-      user_id: currentUser.id,
+    setUserProfile({
       name: nameInput.value.trim(),
-      codeforces: cfHandleInput.value.trim(),
-      leetcode: lcHandleInput.value.trim(),
-      codechef: ccHandleInput.value.trim(),
-      atcoder: acHandleInput.value.trim(),
-      // github removed
-    };
-
-    try {
-      await upsertProfile(profile);
-      setUserProfile({
-        name: profile.name,
-        cfHandle: profile.codeforces,
-        lcHandle: profile.leetcode,
-        ccHandle: profile.codechef,
-        acHandle: profile.atcoder,
-      });
-      setAuthStatus('');
-      setAuthStage('profile');
-    } catch (error) {
-      console.error("Failed to save profile to Supabase", error);
-      setAuthStatus(error.message || 'Failed to save profile.', true);
-      setModalOpen(true);
-    }
+      cfHandle: cfHandleInput.value.trim(),
+      lcHandle: lcHandleInput.value.trim(),
+      ccHandle: ccHandleInput.value.trim(),
+      acHandle: acHandleInput.value.trim(),
+    });
+    await loadStats();
   });
 }
 
 if (editHandlesBtn) editHandlesBtn.addEventListener('click', openHandlesModal);
 if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeHandlesModal);
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    } catch (error) {
-      console.error("Failed to logout", error);
-    } finally {
-      currentUser = null;
-      if (authForm) authForm.reset();
-      setAuthActionsVisible(false);
-      setAuthStage('auth');
-      setAuthStatus('');
-      setModalOpen(true);
-      showGreeting();
-    }
-  });
+
+function initializeProfileFlow() {
+  const profile = getStoredProfile();
+  const hasProfile = Boolean(profile.name || profile.cf || profile.lc || profile.cc || profile.ac);
+  prefillProfileFields(profile);
+  setProfileStage();
+  if (hasProfile || localStorage.getItem(STORAGE_SETUP_DONE) === 'true') {
+    setModalOpen(false);
+  } else {
+    setModalOpen(true);
+  }
 }
-
-
-supabase.auth.onAuthStateChange((event, session) => {
-  (async () => {
-    if (event === 'SIGNED_IN' && session?.user) {
-      currentUser = session.user;
-      setAuthActionsVisible(true);
-      setAuthStage('profile');
-      await syncProfileFromSupabase(currentUser);
-      setModalOpen(false);
-      setAuthStatus('');
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return;
-    }
-
-    if (event === 'SIGNED_OUT') {
-      currentUser = null;
-      setAuthActionsVisible(false);
-      setAuthStage('auth');
-      setModalOpen(true);
-      showGreeting();
-    }
-  })().catch((error) => {
-    console.error("Failed handling auth state change", error);
-  });
-});
 
 const themeToggle = document.getElementById('theme-toggle');
 const themeLabel = document.getElementById('theme-label');
@@ -1421,10 +1064,7 @@ function renderTagAnalysis() {
 
 applyTheme(getStoredTheme());
 showGreeting();
-prefillProfileFields();
-setAuthActionsVisible(false);
-setAuthStage('auth');
+setHeaderActionsVisible();
+initializeProfileFlow();
 setDataLoadingVisible(true);
-restoreSession().finally(() => {
-  loadStats();
-});
+loadStats();

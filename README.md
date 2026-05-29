@@ -13,3 +13,11 @@ This project now supports Netlify Functions for live stats.
 - Optional friendly path (via redirect): `/api/stats`
 
 The frontend (`script.js`) calls the Netlify function with the saved handles and falls back to `data.json` if the function is unavailable.
+
+## Profile setup
+
+Authentication has been removed.
+
+- On first load, the app asks for your name and coding handles.
+- Handles are stored locally in browser localStorage.
+- You can edit handles anytime using the Edit handles button.
